@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Client Login — iContact Africa Solutions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="portal.css">
+</head>
+<body class="auth-body">
+
+<main class="auth-shell">
+  <section class="auth-aside">
+    <a href="../index.html" class="logo logo-light">
+      <span class="logo-mark">iC</span>
+      <span class="logo-text"><strong>iContact Africa</strong><span>Solutions</span></span>
+    </a>
+    <div class="auth-aside-copy">
+      <p class="eyebrow">Client Portal</p>
+      <h2>Your project, in one place.</h2>
+      <ul class="auth-points">
+        <li>Track every stage from scope to launch</li>
+        <li>Approve designs and share files</li>
+        <li>View and download invoices</li>
+        <li>Raise support requests and get same-day replies</li>
+      </ul>
+    </div>
+    <p class="auth-aside-foot">Need access? Email <a href="mailto:enquiries@icontactafricasolutions.org">enquiries@icontactafricasolutions.org</a></p>
+  </section>
+
+  <section class="auth-panel">
+    <a href="../index.html" class="auth-back">← Back to website</a>
+
+    <div class="setup-warning" hidden>
+      <strong>Portal not connected yet.</strong>
+      Add your Supabase URL and anon key to <code>portal/js/config.js</code>. See <code>docs/CLIENT_PORTAL_SETUP.md</code>.
+    </div>
+
+    <!-- Sign in -->
+    <form class="auth-form" data-view="signin" novalidate>
+      <h1>Welcome back</h1>
+      <p class="muted">Sign in to your client dashboard.</p>
+      <label class="field"><span>Email</span>
+        <input type="email" name="email" autocomplete="email" required placeholder="you@company.com">
+      </label>
+      <label class="field"><span>Password</span>
+        <input type="password" name="password" autocomplete="current-password" required placeholder="••••••••">
+      </label>
+      <div class="auth-row">
+        <button type="button" class="link-btn" data-go="forgot">Forgot password?</button>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+      <div class="divider"><span>or</span></div>
+      <button type="button" class="btn btn-outline btn-block" data-go="magic">Email me a sign-in link</button>
+      <p class="form-msg" role="alert"></p>
+    </form>
+
+    <!-- Magic link -->
+    <form class="auth-form" data-view="magic" hidden novalidate>
+      <h1>Sign in with email</h1>
+      <p class="muted">We'll send a one-time link to your inbox. No password needed.</p>
+      <label class="field"><span>Email</span>
+        <input type="email" name="email" autocomplete="email" required placeholder="you@company.com">
+      </label>
+      <button type="submit" class="btn btn-primary btn-block">Send link</button>
+      <button type="button" class="link-btn center" data-go="signin">← Back to sign in</button>
+      <p class="form-msg" role="alert"></p>
+    </form>
+
+    <!-- Forgot password -->
+    <form class="auth-form" data-view="forgot" hidden novalidate>
+      <h1>Reset your password</h1>
+      <p class="muted">Enter your email and we'll send you a reset link.</p>
+      <label class="field"><span>Email</span>
+        <input type="email" name="email" autocomplete="email" required placeholder="you@company.com">
+      </label>
+      <button type="submit" class="btn btn-primary btn-block">Send reset link</button>
+      <button type="button" class="link-btn center" data-go="signin">← Back to sign in</button>
+      <p class="form-msg" role="alert"></p>
+    </form>
+
+    <!-- Set new password (after reset / invite link) -->
+    <form class="auth-form" data-view="reset" hidden novalidate>
+      <h1>Choose a new password</h1>
+      <p class="muted">At least 8 characters.</p>
+      <label class="field"><span>New password</span>
+        <input type="password" name="password" autocomplete="new-password" minlength="8" required>
+      </label>
+      <label class="field"><span>Confirm password</span>
+        <input type="password" name="confirm" autocomplete="new-password" minlength="8" required>
+      </label>
+      <button type="submit" class="btn btn-primary btn-block">Save password</button>
+      <p class="form-msg" role="alert"></p>
+    </form>
+  </section>
+</main>
+
+<script type="module" src="js/login.js"></script>
+</body>
+</html>
