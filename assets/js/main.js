@@ -1,6 +1,4 @@
 // iContact Africa Solutions — shared site behaviour
-document.documentElement.classList.add('js');
-
 document.addEventListener('DOMContentLoaded', () => {
   // ---- Mobile nav -----------------------------------------------------------
   const nav = document.querySelector('.nav');
@@ -44,17 +42,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ---- Reveal on scroll ---------------------------------------------------------
-  const reveals = document.querySelectorAll('.reveal');
-  if ('IntersectionObserver' in window) {
+  // ---- Reveal on scroll (fail-safe) -----------------------------------------
+  // Only blocks that start below the fold are hidden, and only if the browser
+  // supports IntersectionObserver and motion is allowed. If the observer never
+  // responds (some in-app browsers / previews), everything is shown after 2s.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if ('IntersectionObserver' in window && !reduce) {
+    const below = [...document.querySelectorAll('.reveal')]
+      .filter((el) => el.getBoundingClientRect().top > window.innerHeight * 0.9);
+    let alive = false;
     const io = new IntersectionObserver((entries) => {
+      alive = true;
       entries.forEach((en) => {
         if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
       });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-    reveals.forEach((el) => io.observe(el));
-  } else {
-    reveals.forEach((el) => el.classList.add('in'));
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+    below.forEach((el) => { el.classList.add('pre'); io.observe(el); });
+    setTimeout(() => { if (!alive) below.forEach((el) => el.classList.add('in')); }, 2000);
   }
 
   // ---- Hero quick-quote chips ------------------------------------------------------
