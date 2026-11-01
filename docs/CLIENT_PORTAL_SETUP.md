@@ -67,6 +67,16 @@ add their name/company in Admin → Clients → Edit details.
 | Reply to tickets, set status | Support threads, live replies |
 | Review website **Enquiries** | — |
 
+## Writing blog articles
+1. Sign in → **Admin Console → Blog → New article**.
+2. Write in Markdown (toolbar buttons insert headings, bold, links, lists and images), check the **Preview** tab.
+3. Add an excerpt (shown on the blog list and in Google), tags and a cover image.
+4. **Save draft** to keep working, or **Publish**. Set a future **Publish date** to schedule it — it appears
+   on the website automatically at that time.
+
+Articles appear at `/blog.html` and `/article.html?slug=your-article`. Images are stored in the public
+`blog-images` bucket; drafts and scheduled posts are never visible to the public (enforced by the database).
+
 ## Testing the security rules (optional)
 `supabase/tests/` contains a Postgres test suite that impersonates clients, another client, anonymous
 visitors and the admin to prove each can only see/do what they should:

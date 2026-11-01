@@ -1,0 +1,25 @@
+/* Article typography — shared by the public blog and the admin editor preview. */
+.prose { font-size: 17px; line-height: 1.8; color: #2f3b4a; overflow-wrap: break-word; }
+.prose > * + * { margin-top: 1.1em; }
+.prose h2 { font-size: 1.65em; line-height: 1.25; margin-top: 1.8em; color: #141b24; letter-spacing: -0.02em; }
+.prose h3 { font-size: 1.3em; line-height: 1.3; margin-top: 1.6em; color: #141b24; }
+.prose h4 { font-size: 1.1em; margin-top: 1.4em; color: #141b24; }
+.prose p { margin-bottom: 0; }
+.prose a { color: #2e5794; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.prose a:hover { color: #23436f; text-decoration-thickness: 2px; }
+.prose strong { color: #141b24; }
+.prose ul, .prose ol { padding-left: 1.4em; }
+.prose ul { list-style: disc; }
+.prose ol { list-style: decimal; }
+.prose li + li { margin-top: .4em; }
+.prose li::marker { color: #2e5794; }
+.prose blockquote { margin-left: 0; margin-right: 0; padding: 14px 22px; border-left: 4px solid #a9ce47; background: #f5faea; border-radius: 0 12px 12px 0; color: #141b24; font-size: 1.05em; }
+.prose blockquote p { margin: 0; }
+.prose img { display: block; max-width: 100%; height: auto; border-radius: 14px; margin: 1.6em auto; }
+.prose hr { border: 0; height: 1px; background: #dde2e7; margin: 2.4em 0; }
+.prose code { font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; font-size: .88em; padding: 2px 6px; border-radius: 6px; background: #eef1f4; color: #23436f; }
+.prose pre { padding: 18px 20px; border-radius: 12px; background: #141b24; color: #e6edf5; overflow-x: auto; font-size: .9em; line-height: 1.6; }
+.prose pre code { padding: 0; background: none; color: inherit; }
+.prose table { width: 100%; border-collapse: collapse; font-size: .95em; display: block; overflow-x: auto; }
+.prose th, .prose td { padding: 10px 12px; border-bottom: 1px solid #dde2e7; text-align: left; }
+.prose th { color: #141b24; }

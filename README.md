@@ -40,6 +40,16 @@ Preview locally:
 python3 -m http.server 8000
 ```
 
+## Blog (admin CMS)
+- Write, schedule and publish articles in **Admin Console → Blog** (`portal/js/admin-blog.js`, Markdown + live preview).
+- Public pages: `blog.html` (list with topic filters) and `article.html?slug=…` (`assets/js/blog.js`).
+- Markdown is rendered with marked + DOMPurify (`assets/js/markdown.js`) so posts can't inject scripts.
+
+## Legal pages
+`privacy.html`, `terms.html`, `cookies.html` — written for this site's real setup (Zimbabwe Cyber and Data
+Protection Act, Supabase, GitHub Pages, no tracking cookies). **Have a lawyer review them**, and update the
+Cookie Policy if you ever add analytics or ads.
+
 ## Brand assets (`assets/img/`)
 | File | Use |
 |---|---|

@@ -5,12 +5,13 @@ import {
 } from './supabase.js';
 import { SUPABASE_URL } from './config.js';
 import { initShell, openModal, closeModal, withBusy, emptyState, stageTracker } from './shell.js';
+import { blogView, loadPosts } from './admin-blog.js';
 
 const { session, profile } = await requireSession({ admin: true });
 const me = session.user.id;
 const view = document.getElementById('view');
 
-const state = { clients: [], projects: [], invoices: [], files: [], tickets: [], enquiries: [] };
+const state = { clients: [], projects: [], invoices: [], files: [], tickets: [], enquiries: [], posts: [] };
 
 async function load() {
   const q = await Promise.all([
@@ -24,6 +25,7 @@ async function load() {
   const err = q.find((r) => r.error)?.error;
   if (err) { toast(err.message, 'error'); throw err; }
   [state.clients, state.projects, state.invoices, state.files, state.tickets, state.enquiries] = q.map((r) => r.data);
+  state.posts = await loadPosts();
   state.projects.forEach((p) => p.milestones.sort((a, b) => a.sort_order - b.sort_order || (a.due_date || '').localeCompare(b.due_date || '')));
   counts();
 }
@@ -133,6 +135,10 @@ const views = {
     return `
       <div class="toolbar"><span></span><button class="btn btn-primary" data-act="invoice">New invoice</button></div>
       <section class="card">${invoiceTable(state.invoices, true)}</section>`;
+  },
+
+  blog(id) {
+    return blogView(id, state.posts, { me, reload: async () => { state.posts = await loadPosts(); } });
   },
 
   enquiries() {
@@ -604,6 +610,7 @@ document.addEventListener('input', (e) => {
 let route = 'overview';
 let param;
 function render() {
+  if (route === 'blog' && param) return; // never redraw over an article being edited
   const keepScroll = window.scrollY;
   view.innerHTML = views[route](param);
   window.scrollTo(0, keepScroll);
@@ -611,16 +618,17 @@ function render() {
 
 await load();
 initShell(profile, {
-  routes: ['overview', 'clients', 'tickets', 'approvals', 'billing', 'enquiries'],
+  routes: ['overview', 'clients', 'tickets', 'approvals', 'billing', 'blog', 'enquiries'],
   titles: {
     overview: ['Admin', 'Overview'],
     clients: ['Admin', 'Clients'],
     tickets: ['Admin', 'Support queue'],
     approvals: ['Admin', 'Approvals'],
     billing: ['Admin', 'Billing'],
+    blog: ['Content', 'Blog'],
     enquiries: ['Admin', 'Website enquiries'],
   },
-  onRoute(r, p) { route = r; param = p; view.innerHTML = views[r](p); window.scrollTo(0, 0); },
+  onRoute(r, p) { if (r !== 'blog' || !p) window.onbeforeunload = null; route = r; param = p; view.innerHTML = views[r](p); window.scrollTo(0, 0); },
 });
 
 supabase.channel('admin-live')

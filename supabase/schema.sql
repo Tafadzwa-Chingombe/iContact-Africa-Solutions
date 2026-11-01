@@ -168,6 +168,22 @@ create table if not exists public.enquiries (
   created_at  timestamptz not null default now()
 );
 
+
+-- ---------- Indexes on foreign keys (used by joins, RLS checks and cascades) ----
+create index if not exists projects_client_id_idx        on public.projects (client_id);
+create index if not exists milestones_project_id_idx     on public.milestones (project_id);
+create index if not exists invoices_client_id_idx        on public.invoices (client_id);
+create index if not exists invoices_project_id_idx       on public.invoices (project_id);
+create index if not exists files_project_id_idx          on public.files (project_id);
+create index if not exists files_uploaded_by_idx         on public.files (uploaded_by);
+create index if not exists file_comments_file_id_idx     on public.file_comments (file_id);
+create index if not exists file_comments_author_id_idx   on public.file_comments (author_id);
+create index if not exists tickets_client_id_idx         on public.tickets (client_id);
+create index if not exists tickets_project_id_idx        on public.tickets (project_id);
+create index if not exists ticket_messages_ticket_id_idx on public.ticket_messages (ticket_id);
+create index if not exists ticket_messages_author_id_idx on public.ticket_messages (author_id);
+create index if not exists enquiries_created_at_idx      on public.enquiries (created_at desc);
+
 -- ==========================================================================
 -- Row Level Security
 -- ==========================================================================
@@ -204,37 +220,37 @@ $$;
 drop policy if exists "profiles read"   on public.profiles;
 drop policy if exists "profiles update" on public.profiles;
 drop policy if exists "profiles admin"  on public.profiles;
-create policy "profiles read"   on public.profiles for select using (id = auth.uid() or public.is_admin());
-create policy "profiles update" on public.profiles for update using (id = auth.uid()) with check (id = auth.uid());
-create policy "profiles admin"  on public.profiles for all    using (public.is_admin()) with check (public.is_admin());
+create policy "profiles read"   on public.profiles for select using (id = (select auth.uid()) or (select public.is_admin()));
+create policy "profiles update" on public.profiles for update using (id = (select auth.uid())) with check (id = (select auth.uid()));
+create policy "profiles admin"  on public.profiles for all    using ((select public.is_admin())) with check ((select public.is_admin()));
 
 -- projects (clients read only; admins everything)
 drop policy if exists "projects read"  on public.projects;
 drop policy if exists "projects admin" on public.projects;
-create policy "projects read"  on public.projects for select using (client_id = auth.uid() or public.is_admin());
-create policy "projects admin" on public.projects for all    using (public.is_admin()) with check (public.is_admin());
+create policy "projects read"  on public.projects for select using (client_id = (select auth.uid()) or (select public.is_admin()));
+create policy "projects admin" on public.projects for all    using ((select public.is_admin())) with check ((select public.is_admin()));
 
 -- milestones
 drop policy if exists "milestones read"  on public.milestones;
 drop policy if exists "milestones admin" on public.milestones;
-create policy "milestones read"  on public.milestones for select using (public.owns_project(project_id) or public.is_admin());
-create policy "milestones admin" on public.milestones for all    using (public.is_admin()) with check (public.is_admin());
+create policy "milestones read"  on public.milestones for select using (public.owns_project(project_id) or (select public.is_admin()));
+create policy "milestones admin" on public.milestones for all    using ((select public.is_admin())) with check ((select public.is_admin()));
 
 -- invoices (clients never see drafts)
 drop policy if exists "invoices read"  on public.invoices;
 drop policy if exists "invoices admin" on public.invoices;
-create policy "invoices read"  on public.invoices for select using ((client_id = auth.uid() and status <> 'draft') or public.is_admin());
-create policy "invoices admin" on public.invoices for all    using (public.is_admin()) with check (public.is_admin());
+create policy "invoices read"  on public.invoices for select using ((client_id = (select auth.uid()) and status <> 'draft') or (select public.is_admin()));
+create policy "invoices admin" on public.invoices for all    using ((select public.is_admin())) with check ((select public.is_admin()));
 
 -- files: clients read their project's files, upload to their projects, and set approval
 drop policy if exists "files read"          on public.files;
 drop policy if exists "files client insert" on public.files;
 drop policy if exists "files client approve" on public.files;
 drop policy if exists "files admin"         on public.files;
-create policy "files read"           on public.files for select using (public.owns_project(project_id) or public.is_admin());
-create policy "files client insert"  on public.files for insert with check (public.owns_project(project_id) and uploaded_by = auth.uid() and approval = 'none');
+create policy "files read"           on public.files for select using (public.owns_project(project_id) or (select public.is_admin()));
+create policy "files client insert"  on public.files for insert with check (public.owns_project(project_id) and uploaded_by = (select auth.uid()) and approval = 'none');
 create policy "files client approve" on public.files for update using (public.owns_project(project_id) and needs_approval) with check (public.owns_project(project_id) and needs_approval);
-create policy "files admin"          on public.files for all    using (public.is_admin()) with check (public.is_admin());
+create policy "files admin"          on public.files for all    using ((select public.is_admin())) with check ((select public.is_admin()));
 
 -- Clients may only change approval fields on a file, nothing else.
 create or replace function public.limit_client_file_update()
@@ -261,31 +277,31 @@ create trigger files_limit_client_update
 drop policy if exists "file_comments read"   on public.file_comments;
 drop policy if exists "file_comments insert" on public.file_comments;
 drop policy if exists "file_comments admin"  on public.file_comments;
-create policy "file_comments read"   on public.file_comments for select using (public.owns_file(file_id) or public.is_admin());
-create policy "file_comments insert" on public.file_comments for insert with check (author_id = auth.uid() and (public.owns_file(file_id) or public.is_admin()));
-create policy "file_comments admin"  on public.file_comments for all    using (public.is_admin()) with check (public.is_admin());
+create policy "file_comments read"   on public.file_comments for select using (public.owns_file(file_id) or (select public.is_admin()));
+create policy "file_comments insert" on public.file_comments for insert with check (author_id = (select auth.uid()) and (public.owns_file(file_id) or (select public.is_admin())));
+create policy "file_comments admin"  on public.file_comments for all    using ((select public.is_admin())) with check ((select public.is_admin()));
 
 -- tickets
 drop policy if exists "tickets read"   on public.tickets;
 drop policy if exists "tickets insert" on public.tickets;
 drop policy if exists "tickets admin"  on public.tickets;
-create policy "tickets read"   on public.tickets for select using (client_id = auth.uid() or public.is_admin());
-create policy "tickets insert" on public.tickets for insert with check (client_id = auth.uid() and status = 'open');
-create policy "tickets admin"  on public.tickets for all    using (public.is_admin()) with check (public.is_admin());
+create policy "tickets read"   on public.tickets for select using (client_id = (select auth.uid()) or (select public.is_admin()));
+create policy "tickets insert" on public.tickets for insert with check (client_id = (select auth.uid()) and status = 'open');
+create policy "tickets admin"  on public.tickets for all    using ((select public.is_admin())) with check ((select public.is_admin()));
 
 -- ticket messages
 drop policy if exists "ticket_messages read"   on public.ticket_messages;
 drop policy if exists "ticket_messages insert" on public.ticket_messages;
 drop policy if exists "ticket_messages admin"  on public.ticket_messages;
-create policy "ticket_messages read"   on public.ticket_messages for select using (public.owns_ticket(ticket_id) or public.is_admin());
-create policy "ticket_messages insert" on public.ticket_messages for insert with check (author_id = auth.uid() and (public.owns_ticket(ticket_id) or public.is_admin()));
-create policy "ticket_messages admin"  on public.ticket_messages for all    using (public.is_admin()) with check (public.is_admin());
+create policy "ticket_messages read"   on public.ticket_messages for select using (public.owns_ticket(ticket_id) or (select public.is_admin()));
+create policy "ticket_messages insert" on public.ticket_messages for insert with check (author_id = (select auth.uid()) and (public.owns_ticket(ticket_id) or (select public.is_admin())));
+create policy "ticket_messages admin"  on public.ticket_messages for all    using ((select public.is_admin())) with check ((select public.is_admin()));
 
 -- enquiries: anyone may submit, only admins may read
 drop policy if exists "enquiries insert" on public.enquiries;
 drop policy if exists "enquiries admin"  on public.enquiries;
 create policy "enquiries insert" on public.enquiries for insert to anon, authenticated with check (true);
-create policy "enquiries admin"  on public.enquiries for all using (public.is_admin()) with check (public.is_admin());
+create policy "enquiries admin"  on public.enquiries for all using ((select public.is_admin())) with check ((select public.is_admin()));
 
 -- ==========================================================================
 -- Storage: private bucket. Paths are  <project_id>/<filename>
@@ -322,8 +338,8 @@ create policy "portal files upload" on storage.objects for insert
               and public.can_access_storage_path(name));
 
 create policy "portal files admin" on storage.objects for all
-  using (bucket_id = 'portal-files' and public.is_admin())
-  with check (bucket_id = 'portal-files' and public.is_admin());
+  using (bucket_id = 'portal-files' and (select public.is_admin()))
+  with check (bucket_id = 'portal-files' and (select public.is_admin()));
 
 -- ==========================================================================
 -- Realtime: lets the dashboard refresh instantly when the team replies.
@@ -340,6 +356,64 @@ begin
     end loop;
   end if;
 end $$;
+
+-- ==========================================================================
+-- Blog (admin CMS → public blog)
+-- ==========================================================================
+create table if not exists public.posts (
+  id           uuid primary key default gen_random_uuid(),
+  slug         text not null unique
+               check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' and length(slug) <= 120),
+  title        text not null check (length(title) between 1 and 200),
+  excerpt      text check (length(excerpt) <= 400),
+  content      text not null default '',          -- Markdown
+  cover_url    text,
+  tags         text[] not null default '{}',
+  status       text not null default 'draft' check (status in ('draft','published')),
+  published_at timestamptz,                         -- future date = scheduled
+  author_id    uuid references public.profiles(id) on delete set null,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+
+create index if not exists posts_author_id_idx on public.posts (author_id);
+-- The public blog only ever lists published posts, newest first.
+create index if not exists posts_published_idx on public.posts (published_at desc) where status = 'published';
+
+create or replace function public.posts_before_write()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  new.updated_at := now();
+  if new.status = 'published' and new.published_at is null then
+    new.published_at := now();
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists posts_before_write on public.posts;
+create trigger posts_before_write
+  before insert or update on public.posts
+  for each row execute function public.posts_before_write();
+
+alter table public.posts enable row level security;
+
+drop policy if exists "posts public read" on public.posts;
+drop policy if exists "posts admin"       on public.posts;
+-- Anyone (including logged-out visitors) can read published, non-scheduled posts.
+create policy "posts public read" on public.posts for select to anon, authenticated
+  using (status = 'published' and published_at <= now());
+create policy "posts admin" on public.posts for all to authenticated
+  using ((select public.is_admin())) with check ((select public.is_admin()));
+
+-- Public bucket for blog images (anyone can view via public URL; only admins upload).
+insert into storage.buckets (id, name, public)
+values ('blog-images', 'blog-images', true)
+on conflict (id) do nothing;
+
+drop policy if exists "blog images admin" on storage.objects;
+create policy "blog images admin" on storage.objects for all to authenticated
+  using (bucket_id = 'blog-images' and (select public.is_admin()))
+  with check (bucket_id = 'blog-images' and (select public.is_admin()));
 
 -- ==========================================================================
 -- After running: make yourself admin (replace the email):

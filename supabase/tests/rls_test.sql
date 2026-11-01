@@ -91,3 +91,34 @@ update projects set stage='design', progress=40 where name='C1 site';
 \echo 'ticket updated_at touched by message:'
 reset role;
 select updated_at > created_at as touched from tickets;
+
+\echo '===== BLOG ====='
+set role authenticated; set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+\echo 'admin creates draft, published and scheduled posts (expect INSERT 0 3):'
+insert into posts (slug,title,content,status,published_at,author_id) values
+ ('draft-post','Draft','x','draft',null,auth.uid()),
+ ('live-post','Live','# Hello','published',null,auth.uid()),
+ ('future-post','Future','x','published', now() + interval '7 days', auth.uid());
+\echo 'published_at auto-set on live post (expect t):'
+select published_at is not null from posts where slug='live-post';
+\echo 'bad slug rejected (expect ERROR check constraint):'
+insert into posts (slug,title) values ('Bad Slug!','x');
+\echo 'admin sees all posts (expect 3):'
+select count(*) from posts;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000c1';
+\echo 'client sees only live post (expect live-post):'
+select slug from posts;
+\echo 'client cannot write posts (expect ERROR rls, UPDATE 0):'
+insert into posts (slug,title) values ('hack','x');
+update posts set title='hacked';
+reset request.jwt.claim.sub; set role anon;
+\echo 'anon sees only live post (expect live-post):'
+select slug from posts;
+\echo 'anon cannot write posts (expect ERROR rls):'
+insert into posts (slug,title) values ('anon','x');
+\echo 'blog image upload: anon (expect ERROR rls):'
+insert into storage.objects (bucket_id,name) values ('blog-images','covers/x.png');
+set role authenticated; set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+\echo 'blog image upload: admin (expect INSERT 0 1):'
+insert into storage.objects (bucket_id,name) values ('blog-images','covers/x.png');
+reset role;
