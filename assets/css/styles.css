@@ -81,6 +81,8 @@ h2 { font-weight: 700; }
 h3 { font-weight: 600; letter-spacing: -0.01em; }
 p { margin: 0; }
 :focus-visible { outline: none; box-shadow: var(--focus); border-radius: 6px; }
+/* Anything marked hidden stays hidden, whatever its layout class says */
+[hidden] { display: none !important; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .skip-link { position: absolute; left: 16px; top: -60px; z-index: 100; background: var(--brand-600); color: #fff; padding: 10px 16px; border-radius: var(--radius-sm); }
 .skip-link:focus { top: 12px; }
