@@ -19,6 +19,22 @@ docs/CLIENT_PORTAL_SETUP.md  Step-by-step setup
 
 Start with **[docs/CLIENT_PORTAL_SETUP.md](docs/CLIENT_PORTAL_SETUP.md)**.
 
+## Domains, hosting & email
+- `domains.html` — domain checker. Live availability (public RDAP) for .com/.net/.org/.africa/.online/.store/.info;
+  .co.zw and .org.zw show "We'll confirm". A name is only shown "Available" when the registry itself says so.
+- `hosting.html` — web hosting (monthly/yearly toggle) and email hosting (per-mailbox calculator).
+- **All prices live in [`assets/js/catalog.js`](assets/js/catalog.js)** — the current values are placeholders; edit them there
+  and the Domains page, Hosting page and homepage "from" prices all update.
+- Orders open a short form (`assets/js/order.js`) that saves to the admin **Enquiries** inbox, with WhatsApp/email
+  fallback until Supabase is connected. No payment is taken online — you confirm and invoice through the portal.
+
+## Portfolio & case studies
+- `work.html` — filterable portfolio (deep links like `work.html#gbp`), featured case study.
+- `work/<project>.html` — one case study per project with a desktop/mobile preview toggle.
+- Case-study text is a **draft** (marked with `<!-- DRAFT … -->` comments) — review it, and add confirmed results
+  (enquiries, calls, rankings) where the `<!-- Add confirmed numbers here -->` comment sits. Replace the illustrative
+  previews with real screenshots when you have them.
+
 Preview locally:
 ```bash
 python3 -m http.server 8000

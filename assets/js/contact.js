@@ -1,10 +1,9 @@
-// Contact form: saves enquiries to Supabase (the admin console's "Enquiries" inbox).
-// Falls back to opening the visitor's email app if the portal isn't configured yet.
-import { SUPABASE_URL, SUPABASE_ANON_KEY, SUPPORT_EMAIL } from '../../portal/js/config.js';
+// Contact form: saves enquiries to the admin "Enquiries" inbox (see enquiry.js).
+// Falls back to the visitor's email app if the portal isn't configured yet.
+import { submitEnquiry, mailtoLink, summaryText } from './enquiry.js';
 
 const form = document.getElementById('contact-form');
 const status = form?.querySelector('.form-status');
-const configured = !SUPABASE_URL.includes('YOUR-PROJECT-REF');
 
 // Prefill from ?service=…&email=… (hero quick-quote, pricing buttons)
 const params = new URLSearchParams(location.search);
@@ -36,28 +35,14 @@ form?.addEventListener('submit', async (e) => {
   };
   const btn = form.querySelector('button[type=submit]');
   btn.disabled = true;
-
-  try {
-    if (!configured) throw new Error('not-configured');
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/enquiries`, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const res = await submitEnquiry(data);
+  btn.disabled = false;
+  if (res.ok) {
     form.reset();
     show('Thanks — your message has been received. Tafadzwa will get back to you the same day.', true);
-  } catch (err) {
-    // Fallback so no lead is ever lost: open the visitor's email app pre-filled.
-    const body = `Name: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phone || '-'}\nService: ${data.service || '-'}\nBudget: ${data.budget || '-'}\n\n${data.message}`;
-    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`Website enquiry — ${data.service || 'General'}`)}&body=${encodeURIComponent(body)}`;
+  } else {
+    // No lead is ever lost: open the visitor's email app pre-filled.
+    window.location.href = mailtoLink(`Website enquiry — ${data.service || 'General'}`, summaryText(data));
     show('Opening your email app to send this — or WhatsApp us on +263 71 857 4277.', true);
-  } finally {
-    btn.disabled = false;
   }
 });
