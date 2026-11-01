@@ -77,6 +77,14 @@ add their name/company in Admin → Clients → Edit details.
 Articles appear at `/blog.html` and `/article.html?slug=your-article`. Images are stored in the public
 `blog-images` bucket; drafts and scheduled posts are never visible to the public (enforced by the database).
 
+## Posting jobs (Careers)
+1. One-time: run `supabase/migrations/20261101_jobs.sql` in Supabase → SQL Editor (already included in `schema.sql`).
+2. **Admin Console → Careers → Post a job**: title, location, type, department, closing date, summary,
+   "What you'll do" and "What you'll bring" (one per line).
+3. **Publish** — it appears on `/careers.html` straight away. After the closing date it shows as *Closed*
+   automatically (hidden 60 days later). Use **Close now** to stop applications early, **Duplicate** to reuse a role.
+4. Applications go to chingombet@gmail.com (set `CAREERS_EMAIL` in `assets/js/careers.js` to change).
+
 ## Testing the security rules (optional)
 `supabase/tests/` contains a Postgres test suite that impersonates clients, another client, anonymous
 visitors and the admin to prove each can only see/do what they should:

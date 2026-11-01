@@ -122,3 +122,20 @@ set role authenticated; set request.jwt.claim.sub = '00000000-0000-0000-0000-000
 \echo 'blog image upload: admin (expect INSERT 0 1):'
 insert into storage.objects (bucket_id,name) values ('blog-images','covers/x.png');
 reset role;
+
+\echo '===== CAREERS (jobs) ====='
+set role authenticated; set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+\echo 'admin creates draft + published jobs (expect INSERT 0 2):'
+insert into jobs (title, status, closes_on) values ('Draft role','draft', current_date + 30), ('Live role','published', current_date + 30);
+\echo 'title too short rejected (expect ERROR check):'
+insert into jobs (title) values ('x');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000c1';
+\echo 'client sees only published (expect Live role) and cannot write (expect ERROR, UPDATE 0):'
+select title from jobs;
+insert into jobs (title) values ('hack role');
+update jobs set title = 'hacked';
+reset request.jwt.claim.sub; set role anon;
+\echo 'anon sees only published (expect Live role) and cannot write (expect ERROR):'
+select title from jobs;
+insert into jobs (title) values ('anon role');
+reset role;

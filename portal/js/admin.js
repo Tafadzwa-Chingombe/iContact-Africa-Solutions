@@ -6,12 +6,13 @@ import {
 import { SUPABASE_URL } from './config.js';
 import { initShell, openModal, closeModal, withBusy, emptyState, stageTracker } from './shell.js';
 import { blogView, loadPosts } from './admin-blog.js';
+import { careersView, loadJobs } from './admin-careers.js';
 
 const { session, profile } = await requireSession({ admin: true });
 const me = session.user.id;
 const view = document.getElementById('view');
 
-const state = { clients: [], projects: [], invoices: [], files: [], tickets: [], enquiries: [], posts: [] };
+const state = { clients: [], projects: [], invoices: [], files: [], tickets: [], enquiries: [], posts: [], jobs: { rows: [] } };
 
 async function load() {
   const q = await Promise.all([
@@ -26,6 +27,7 @@ async function load() {
   if (err) { toast(err.message, 'error'); throw err; }
   [state.clients, state.projects, state.invoices, state.files, state.tickets, state.enquiries] = q.map((r) => r.data);
   state.posts = await loadPosts();
+  state.jobs = await loadJobs();
   state.projects.forEach((p) => p.milestones.sort((a, b) => a.sort_order - b.sort_order || (a.due_date || '').localeCompare(b.due_date || '')));
   counts();
 }
@@ -135,6 +137,10 @@ const views = {
     return `
       <div class="toolbar"><span></span><button class="btn btn-primary" data-act="invoice">New invoice</button></div>
       <section class="card">${invoiceTable(state.invoices, true)}</section>`;
+  },
+
+  careers(id) {
+    return careersView(id, state.jobs, { me, reload: async () => { state.jobs = await loadJobs(); } });
   },
 
   blog(id) {
@@ -610,7 +616,7 @@ document.addEventListener('input', (e) => {
 let route = 'overview';
 let param;
 function render() {
-  if (route === 'blog' && param) return; // never redraw over an article being edited
+  if ((route === 'blog' || route === 'careers') && param) return; // never redraw over an open editor
   const keepScroll = window.scrollY;
   view.innerHTML = views[route](param);
   window.scrollTo(0, keepScroll);
@@ -618,7 +624,7 @@ function render() {
 
 await load();
 initShell(profile, {
-  routes: ['overview', 'clients', 'tickets', 'approvals', 'billing', 'blog', 'enquiries'],
+  routes: ['overview', 'clients', 'tickets', 'approvals', 'billing', 'blog', 'careers', 'enquiries'],
   titles: {
     overview: ['Admin', 'Overview'],
     clients: ['Admin', 'Clients'],
@@ -626,9 +632,10 @@ initShell(profile, {
     approvals: ['Admin', 'Approvals'],
     billing: ['Admin', 'Billing'],
     blog: ['Content', 'Blog'],
+    careers: ['Content', 'Careers'],
     enquiries: ['Admin', 'Website enquiries'],
   },
-  onRoute(r, p) { if (r !== 'blog' || !p) window.onbeforeunload = null; route = r; param = p; view.innerHTML = views[r](p); window.scrollTo(0, 0); },
+  onRoute(r, p) { if (!((r === 'blog' || r === 'careers') && p)) window.onbeforeunload = null; route = r; param = p; view.innerHTML = views[r](p); window.scrollTo(0, 0); },
 });
 
 supabase.channel('admin-live')

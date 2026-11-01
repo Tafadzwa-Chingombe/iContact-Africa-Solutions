@@ -1,7 +1,8 @@
 // ==========================================================================
 // Careers — job listings
 // --------------------------------------------------------------------------
-// ✏️  HOW TO POST A JOB: add an object to JOBS below and push. Each role shows
+// ✏️  EASIEST: post jobs in the Admin Console → Careers (they load from Supabase).
+// You can also hard-code roles here: add an object to JOBS below and push. Each role shows
 // as "Open" until its closing date, then automatically switches to "Closed"
 // (closing day is inclusive, Harare time). Delete old roles whenever you like.
 //
@@ -20,10 +21,12 @@
 const JOBS = [
 ];
 
-const CAREERS_EMAIL = 'enquiries@icontactafricasolutions.org';
+const CAREERS_EMAIL = 'chingombet@gmail.com';
 const WHATSAPP = '263718574277';
 
 // --------------------------------------------------------------------------
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../../portal/js/config.js';
+
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = (d) => new Date(`${d}T12:00:00+02:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 // "today" in Harare (UTC+2) as YYYY-MM-DD
@@ -32,17 +35,16 @@ const todayHarare = () => new Date(Date.now() + 2 * 3600e3).toISOString().slice(
 const list = document.getElementById('jobs');
 const none = document.getElementById('no-jobs');
 const count = document.getElementById('jobs-count');
-const today = todayHarare();
-const jobs = JOBS.map((j) => ({ ...j, open: !j.closes || j.closes >= today }))
-  .sort((a, b) => (b.open - a.open) || String(a.closes).localeCompare(String(b.closes)));
-const openJobs = jobs.filter((j) => j.open);
 
-if (count) count.textContent = openJobs.length ? `${openJobs.length} open role${openJobs.length === 1 ? '' : 's'}` : 'No open roles right now';
-if (none) {
-  none.querySelector('h3').textContent = jobs.length ? 'No other positions open right now' : 'No positions open right now';
-}
-
-if (list && jobs.length) {
+function render(all) {
+  const today = todayHarare();
+  const jobs = all.map((j) => ({ ...j, open: !j.closes || j.closes >= today }))
+    .sort((a, b) => (b.open - a.open) || String(a.closes || '9999').localeCompare(String(b.closes || '9999')));
+  const openJobs = jobs.filter((j) => j.open);
+  if (count) count.textContent = openJobs.length ? `${openJobs.length} open role${openJobs.length === 1 ? '' : 's'}` : 'No open roles right now';
+  if (none) none.querySelector('h3').textContent = jobs.length ? 'No other positions open right now' : 'No positions open right now';
+  if (!list) return;
+  list.hidden = !jobs.length;
   list.innerHTML = jobs.map((j, i) => {
     const subject = encodeURIComponent(`Application: ${j.title}`);
     const body = encodeURIComponent(`Hi iContact,\n\nI'd like to apply for the ${j.title} role. My CV is attached.\n\nName:\nPhone:\nPortfolio/LinkedIn:\n`);
@@ -69,5 +71,24 @@ if (list && jobs.length) {
         : '<span class="muted">Applications for this role have closed.</span>'}</footer>
     </article>`;
   }).join('');
-  list.hidden = false;
 }
+
+// 1) roles hard-coded above, straight away
+render(JOBS);
+
+// 2) roles posted from the Admin Console (published only — enforced by the database)
+(async () => {
+  if (SUPABASE_URL.includes('YOUR-PROJECT-REF')) return;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/jobs?select=title,location,employment_type,department,summary,responsibilities,requirements,closes_on&status=eq.published&order=closes_on.asc.nullslast`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+    });
+    if (!res.ok) return; // e.g. jobs table not created yet — keep the static list
+    const rows = await res.json();
+    const fromDb = rows.map((r) => ({ title: r.title, location: r.location, type: r.employment_type, department: r.department,
+      summary: r.summary, responsibilities: r.responsibilities, requirements: r.requirements, closes: r.closes_on }));
+    // hide roles that closed more than 60 days ago so the page stays tidy
+    const cutoff = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
+    render([...JOBS, ...fromDb.filter((j) => !j.closes || j.closes >= cutoff)]);
+  } catch { /* offline or blocked: keep the static list */ }
+})();
