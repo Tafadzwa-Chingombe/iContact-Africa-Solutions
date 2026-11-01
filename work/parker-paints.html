@@ -61,7 +61,172 @@
 
 <main id="main">
 
-  <section class="page-hero case-hero">
+  <section class="page-hero case-hero hero-bg">
+<div class="hero-code" aria-hidden="true"><div class="hero-code-col"><div class="hero-code-track"><pre><span class="ln">1</span><span class="c">&lt;!-- yourbusiness.co.zw — built by iContact Africa --&gt;</span>
+<span class="ln">2</span><span class="t">&lt;header</span><span class="a"> class</span>=<span class="s">&quot;site-header&quot;</span><span class="t">&gt;</span>
+<span class="ln">3</span>  <span class="t">&lt;nav</span><span class="a"> aria-label</span>=<span class="s">&quot;Primary&quot;</span><span class="t">&gt;</span>
+<span class="ln">4</span>    <span class="t">&lt;a</span><span class="a"> href</span>=<span class="s">&quot;/quote&quot;</span><span class="a"> class</span>=<span class="s">&quot;btn btn-primary&quot;</span><span class="t">&gt;</span>Get a quote<span class="t">&lt;/a&gt;</span>
+<span class="ln">5</span>  <span class="t">&lt;/nav&gt;</span>
+<span class="ln">6</span><span class="t">&lt;/header&gt;</span>
+<span class="ln">7</span>
+<span class="ln">8</span><span class="p">.hero</span> {
+<span class="ln">9</span>  <span class="p">display</span>: <span class="k">grid</span>;
+<span class="ln">10</span>  <span class="p">gap</span>: <span class="n">48px</span>;
+<span class="ln">11</span>  <span class="p">background</span>: <span class="f">linear-gradient</span>(<span class="n">160deg</span>, <span class="s">#142a47</span>, <span class="s">#0e141b</span>);
+<span class="ln">12</span>}
+<span class="ln">13</span>
+<span class="ln">14</span><span class="c">// Track every enquiry, not just page views</span>
+<span class="ln">15</span><span class="k">const</span> form = document.<span class="f">querySelector</span>(<span class="s">&#x27;#contact-form&#x27;</span>);
+<span class="ln">16</span>form.<span class="f">addEventListener</span>(<span class="s">&#x27;submit&#x27;</span>, <span class="k">async</span> (e) =&gt; {
+<span class="ln">17</span>  e.<span class="f">preventDefault</span>();
+<span class="ln">18</span>  <span class="k">const</span> lead = <span class="f">Object</span>.<span class="f">fromEntries</span>(<span class="k">new</span> <span class="f">FormData</span>(form));
+<span class="ln">19</span>  <span class="k">await</span> <span class="f">saveEnquiry</span>(lead);
+<span class="ln">20</span>  <span class="f">gtag</span>(<span class="s">&#x27;event&#x27;</span>, <span class="s">&#x27;generate_lead&#x27;</span>, { value: <span class="n">1</span> });
+<span class="ln">21</span>  <span class="f">notify</span>(<span class="s">&#x27;Tafadzwa&#x27;</span>, <span class="s">`New enquiry from ${lead.name}`</span>);
+<span class="ln">22</span>});
+<span class="ln">23</span>
+<span class="ln">24</span><span class="k">export async function</span> <span class="f">rankOnGoogle</span>(site) {
+<span class="ln">25</span>  <span class="k">await</span> site.<span class="f">optimise</span>({ speed: <span class="n">100</span>, mobile: <span class="k">true</span>, schema: <span class="k">true</span> });
+<span class="ln">26</span>  <span class="k">return</span> site.<span class="f">submitSitemap</span>(<span class="s">&#x27;https://search.google.com&#x27;</span>);
+<span class="ln">27</span>}
+<span class="ln">28</span>
+<span class="ln">29</span><span class="c">/* Client portal: live project status */</span>
+<span class="ln">30</span><span class="k">const</span> project = { stage: <span class="s">&#x27;build&#x27;</span>, progress: <span class="n">72</span>, launch: <span class="s">&#x27;30 days&#x27;</span> };
+<span class="ln">31</span><span class="k">if</span> (project.progress &gt;= <span class="n">100</span>) <span class="f">launch</span>({ downtime: <span class="n">0</span> });
+<span class="ln">32</span>
+<span class="ln">33</span><span class="t">&lt;section</span><span class="a"> id</span>=<span class="s">&quot;services&quot;</span><span class="t">&gt;</span>
+<span class="ln">34</span>  <span class="t">&lt;h2&gt;</span>Everything your business needs online<span class="t">&lt;/h2&gt;</span>
+<span class="ln">35</span>  <span class="t">&lt;ul</span><span class="a"> class</span>=<span class="s">&quot;services-grid&quot;</span><span class="t">&gt;</span>
+<span class="ln">36</span>    <span class="t">&lt;li&gt;</span>Websites · SEO · Ads · Branding<span class="t">&lt;/li&gt;</span>
+<span class="ln">37</span>  <span class="t">&lt;/ul&gt;</span>
+<span class="ln">38</span><span class="t">&lt;/section&gt;</span>
+<span class="ln">39</span>
+<span class="ln">40</span><span class="p">@media</span> (<span class="p">max-width</span>: <span class="n">640px</span>) {
+<span class="ln">41</span>  <span class="p">.nav-links</span> { <span class="p">display</span>: <span class="k">none</span>; }
+<span class="ln">42</span>}</pre><pre><span class="ln">1</span><span class="c">&lt;!-- yourbusiness.co.zw — built by iContact Africa --&gt;</span>
+<span class="ln">2</span><span class="t">&lt;header</span><span class="a"> class</span>=<span class="s">&quot;site-header&quot;</span><span class="t">&gt;</span>
+<span class="ln">3</span>  <span class="t">&lt;nav</span><span class="a"> aria-label</span>=<span class="s">&quot;Primary&quot;</span><span class="t">&gt;</span>
+<span class="ln">4</span>    <span class="t">&lt;a</span><span class="a"> href</span>=<span class="s">&quot;/quote&quot;</span><span class="a"> class</span>=<span class="s">&quot;btn btn-primary&quot;</span><span class="t">&gt;</span>Get a quote<span class="t">&lt;/a&gt;</span>
+<span class="ln">5</span>  <span class="t">&lt;/nav&gt;</span>
+<span class="ln">6</span><span class="t">&lt;/header&gt;</span>
+<span class="ln">7</span>
+<span class="ln">8</span><span class="p">.hero</span> {
+<span class="ln">9</span>  <span class="p">display</span>: <span class="k">grid</span>;
+<span class="ln">10</span>  <span class="p">gap</span>: <span class="n">48px</span>;
+<span class="ln">11</span>  <span class="p">background</span>: <span class="f">linear-gradient</span>(<span class="n">160deg</span>, <span class="s">#142a47</span>, <span class="s">#0e141b</span>);
+<span class="ln">12</span>}
+<span class="ln">13</span>
+<span class="ln">14</span><span class="c">// Track every enquiry, not just page views</span>
+<span class="ln">15</span><span class="k">const</span> form = document.<span class="f">querySelector</span>(<span class="s">&#x27;#contact-form&#x27;</span>);
+<span class="ln">16</span>form.<span class="f">addEventListener</span>(<span class="s">&#x27;submit&#x27;</span>, <span class="k">async</span> (e) =&gt; {
+<span class="ln">17</span>  e.<span class="f">preventDefault</span>();
+<span class="ln">18</span>  <span class="k">const</span> lead = <span class="f">Object</span>.<span class="f">fromEntries</span>(<span class="k">new</span> <span class="f">FormData</span>(form));
+<span class="ln">19</span>  <span class="k">await</span> <span class="f">saveEnquiry</span>(lead);
+<span class="ln">20</span>  <span class="f">gtag</span>(<span class="s">&#x27;event&#x27;</span>, <span class="s">&#x27;generate_lead&#x27;</span>, { value: <span class="n">1</span> });
+<span class="ln">21</span>  <span class="f">notify</span>(<span class="s">&#x27;Tafadzwa&#x27;</span>, <span class="s">`New enquiry from ${lead.name}`</span>);
+<span class="ln">22</span>});
+<span class="ln">23</span>
+<span class="ln">24</span><span class="k">export async function</span> <span class="f">rankOnGoogle</span>(site) {
+<span class="ln">25</span>  <span class="k">await</span> site.<span class="f">optimise</span>({ speed: <span class="n">100</span>, mobile: <span class="k">true</span>, schema: <span class="k">true</span> });
+<span class="ln">26</span>  <span class="k">return</span> site.<span class="f">submitSitemap</span>(<span class="s">&#x27;https://search.google.com&#x27;</span>);
+<span class="ln">27</span>}
+<span class="ln">28</span>
+<span class="ln">29</span><span class="c">/* Client portal: live project status */</span>
+<span class="ln">30</span><span class="k">const</span> project = { stage: <span class="s">&#x27;build&#x27;</span>, progress: <span class="n">72</span>, launch: <span class="s">&#x27;30 days&#x27;</span> };
+<span class="ln">31</span><span class="k">if</span> (project.progress &gt;= <span class="n">100</span>) <span class="f">launch</span>({ downtime: <span class="n">0</span> });
+<span class="ln">32</span>
+<span class="ln">33</span><span class="t">&lt;section</span><span class="a"> id</span>=<span class="s">&quot;services&quot;</span><span class="t">&gt;</span>
+<span class="ln">34</span>  <span class="t">&lt;h2&gt;</span>Everything your business needs online<span class="t">&lt;/h2&gt;</span>
+<span class="ln">35</span>  <span class="t">&lt;ul</span><span class="a"> class</span>=<span class="s">&quot;services-grid&quot;</span><span class="t">&gt;</span>
+<span class="ln">36</span>    <span class="t">&lt;li&gt;</span>Websites · SEO · Ads · Branding<span class="t">&lt;/li&gt;</span>
+<span class="ln">37</span>  <span class="t">&lt;/ul&gt;</span>
+<span class="ln">38</span><span class="t">&lt;/section&gt;</span>
+<span class="ln">39</span>
+<span class="ln">40</span><span class="p">@media</span> (<span class="p">max-width</span>: <span class="n">640px</span>) {
+<span class="ln">41</span>  <span class="p">.nav-links</span> { <span class="p">display</span>: <span class="k">none</span>; }
+<span class="ln">42</span>}</pre></div></div><div class="hero-code-col alt"><div class="hero-code-track"><pre><span class="ln">1</span>});
+<span class="ln">2</span>
+<span class="ln">3</span><span class="k">export async function</span> <span class="f">rankOnGoogle</span>(site) {
+<span class="ln">4</span>  <span class="k">await</span> site.<span class="f">optimise</span>({ speed: <span class="n">100</span>, mobile: <span class="k">true</span>, schema: <span class="k">true</span> });
+<span class="ln">5</span>  <span class="k">return</span> site.<span class="f">submitSitemap</span>(<span class="s">&#x27;https://search.google.com&#x27;</span>);
+<span class="ln">6</span>}
+<span class="ln">7</span>
+<span class="ln">8</span><span class="c">/* Client portal: live project status */</span>
+<span class="ln">9</span><span class="k">const</span> project = { stage: <span class="s">&#x27;build&#x27;</span>, progress: <span class="n">72</span>, launch: <span class="s">&#x27;30 days&#x27;</span> };
+<span class="ln">10</span><span class="k">if</span> (project.progress &gt;= <span class="n">100</span>) <span class="f">launch</span>({ downtime: <span class="n">0</span> });
+<span class="ln">11</span>
+<span class="ln">12</span><span class="t">&lt;section</span><span class="a"> id</span>=<span class="s">&quot;services&quot;</span><span class="t">&gt;</span>
+<span class="ln">13</span>  <span class="t">&lt;h2&gt;</span>Everything your business needs online<span class="t">&lt;/h2&gt;</span>
+<span class="ln">14</span>  <span class="t">&lt;ul</span><span class="a"> class</span>=<span class="s">&quot;services-grid&quot;</span><span class="t">&gt;</span>
+<span class="ln">15</span>    <span class="t">&lt;li&gt;</span>Websites · SEO · Ads · Branding<span class="t">&lt;/li&gt;</span>
+<span class="ln">16</span>  <span class="t">&lt;/ul&gt;</span>
+<span class="ln">17</span><span class="t">&lt;/section&gt;</span>
+<span class="ln">18</span>
+<span class="ln">19</span><span class="p">@media</span> (<span class="p">max-width</span>: <span class="n">640px</span>) {
+<span class="ln">20</span>  <span class="p">.nav-links</span> { <span class="p">display</span>: <span class="k">none</span>; }
+<span class="ln">21</span>}
+<span class="ln">22</span><span class="c">&lt;!-- yourbusiness.co.zw — built by iContact Africa --&gt;</span>
+<span class="ln">23</span><span class="t">&lt;header</span><span class="a"> class</span>=<span class="s">&quot;site-header&quot;</span><span class="t">&gt;</span>
+<span class="ln">24</span>  <span class="t">&lt;nav</span><span class="a"> aria-label</span>=<span class="s">&quot;Primary&quot;</span><span class="t">&gt;</span>
+<span class="ln">25</span>    <span class="t">&lt;a</span><span class="a"> href</span>=<span class="s">&quot;/quote&quot;</span><span class="a"> class</span>=<span class="s">&quot;btn btn-primary&quot;</span><span class="t">&gt;</span>Get a quote<span class="t">&lt;/a&gt;</span>
+<span class="ln">26</span>  <span class="t">&lt;/nav&gt;</span>
+<span class="ln">27</span><span class="t">&lt;/header&gt;</span>
+<span class="ln">28</span>
+<span class="ln">29</span><span class="p">.hero</span> {
+<span class="ln">30</span>  <span class="p">display</span>: <span class="k">grid</span>;
+<span class="ln">31</span>  <span class="p">gap</span>: <span class="n">48px</span>;
+<span class="ln">32</span>  <span class="p">background</span>: <span class="f">linear-gradient</span>(<span class="n">160deg</span>, <span class="s">#142a47</span>, <span class="s">#0e141b</span>);
+<span class="ln">33</span>}
+<span class="ln">34</span>
+<span class="ln">35</span><span class="c">// Track every enquiry, not just page views</span>
+<span class="ln">36</span><span class="k">const</span> form = document.<span class="f">querySelector</span>(<span class="s">&#x27;#contact-form&#x27;</span>);
+<span class="ln">37</span>form.<span class="f">addEventListener</span>(<span class="s">&#x27;submit&#x27;</span>, <span class="k">async</span> (e) =&gt; {
+<span class="ln">38</span>  e.<span class="f">preventDefault</span>();
+<span class="ln">39</span>  <span class="k">const</span> lead = <span class="f">Object</span>.<span class="f">fromEntries</span>(<span class="k">new</span> <span class="f">FormData</span>(form));
+<span class="ln">40</span>  <span class="k">await</span> <span class="f">saveEnquiry</span>(lead);
+<span class="ln">41</span>  <span class="f">gtag</span>(<span class="s">&#x27;event&#x27;</span>, <span class="s">&#x27;generate_lead&#x27;</span>, { value: <span class="n">1</span> });
+<span class="ln">42</span>  <span class="f">notify</span>(<span class="s">&#x27;Tafadzwa&#x27;</span>, <span class="s">`New enquiry from ${lead.name}`</span>);</pre><pre><span class="ln">1</span>});
+<span class="ln">2</span>
+<span class="ln">3</span><span class="k">export async function</span> <span class="f">rankOnGoogle</span>(site) {
+<span class="ln">4</span>  <span class="k">await</span> site.<span class="f">optimise</span>({ speed: <span class="n">100</span>, mobile: <span class="k">true</span>, schema: <span class="k">true</span> });
+<span class="ln">5</span>  <span class="k">return</span> site.<span class="f">submitSitemap</span>(<span class="s">&#x27;https://search.google.com&#x27;</span>);
+<span class="ln">6</span>}
+<span class="ln">7</span>
+<span class="ln">8</span><span class="c">/* Client portal: live project status */</span>
+<span class="ln">9</span><span class="k">const</span> project = { stage: <span class="s">&#x27;build&#x27;</span>, progress: <span class="n">72</span>, launch: <span class="s">&#x27;30 days&#x27;</span> };
+<span class="ln">10</span><span class="k">if</span> (project.progress &gt;= <span class="n">100</span>) <span class="f">launch</span>({ downtime: <span class="n">0</span> });
+<span class="ln">11</span>
+<span class="ln">12</span><span class="t">&lt;section</span><span class="a"> id</span>=<span class="s">&quot;services&quot;</span><span class="t">&gt;</span>
+<span class="ln">13</span>  <span class="t">&lt;h2&gt;</span>Everything your business needs online<span class="t">&lt;/h2&gt;</span>
+<span class="ln">14</span>  <span class="t">&lt;ul</span><span class="a"> class</span>=<span class="s">&quot;services-grid&quot;</span><span class="t">&gt;</span>
+<span class="ln">15</span>    <span class="t">&lt;li&gt;</span>Websites · SEO · Ads · Branding<span class="t">&lt;/li&gt;</span>
+<span class="ln">16</span>  <span class="t">&lt;/ul&gt;</span>
+<span class="ln">17</span><span class="t">&lt;/section&gt;</span>
+<span class="ln">18</span>
+<span class="ln">19</span><span class="p">@media</span> (<span class="p">max-width</span>: <span class="n">640px</span>) {
+<span class="ln">20</span>  <span class="p">.nav-links</span> { <span class="p">display</span>: <span class="k">none</span>; }
+<span class="ln">21</span>}
+<span class="ln">22</span><span class="c">&lt;!-- yourbusiness.co.zw — built by iContact Africa --&gt;</span>
+<span class="ln">23</span><span class="t">&lt;header</span><span class="a"> class</span>=<span class="s">&quot;site-header&quot;</span><span class="t">&gt;</span>
+<span class="ln">24</span>  <span class="t">&lt;nav</span><span class="a"> aria-label</span>=<span class="s">&quot;Primary&quot;</span><span class="t">&gt;</span>
+<span class="ln">25</span>    <span class="t">&lt;a</span><span class="a"> href</span>=<span class="s">&quot;/quote&quot;</span><span class="a"> class</span>=<span class="s">&quot;btn btn-primary&quot;</span><span class="t">&gt;</span>Get a quote<span class="t">&lt;/a&gt;</span>
+<span class="ln">26</span>  <span class="t">&lt;/nav&gt;</span>
+<span class="ln">27</span><span class="t">&lt;/header&gt;</span>
+<span class="ln">28</span>
+<span class="ln">29</span><span class="p">.hero</span> {
+<span class="ln">30</span>  <span class="p">display</span>: <span class="k">grid</span>;
+<span class="ln">31</span>  <span class="p">gap</span>: <span class="n">48px</span>;
+<span class="ln">32</span>  <span class="p">background</span>: <span class="f">linear-gradient</span>(<span class="n">160deg</span>, <span class="s">#142a47</span>, <span class="s">#0e141b</span>);
+<span class="ln">33</span>}
+<span class="ln">34</span>
+<span class="ln">35</span><span class="c">// Track every enquiry, not just page views</span>
+<span class="ln">36</span><span class="k">const</span> form = document.<span class="f">querySelector</span>(<span class="s">&#x27;#contact-form&#x27;</span>);
+<span class="ln">37</span>form.<span class="f">addEventListener</span>(<span class="s">&#x27;submit&#x27;</span>, <span class="k">async</span> (e) =&gt; {
+<span class="ln">38</span>  e.<span class="f">preventDefault</span>();
+<span class="ln">39</span>  <span class="k">const</span> lead = <span class="f">Object</span>.<span class="f">fromEntries</span>(<span class="k">new</span> <span class="f">FormData</span>(form));
+<span class="ln">40</span>  <span class="k">await</span> <span class="f">saveEnquiry</span>(lead);
+<span class="ln">41</span>  <span class="f">gtag</span>(<span class="s">&#x27;event&#x27;</span>, <span class="s">&#x27;generate_lead&#x27;</span>, { value: <span class="n">1</span> });
+<span class="ln">42</span>  <span class="f">notify</span>(<span class="s">&#x27;Tafadzwa&#x27;</span>, <span class="s">`New enquiry from ${lead.name}`</span>);</pre></div></div></div>
     <div class="container" style="padding-bottom:90px">
       <p class="crumbs"><a href="../work.html">Work</a> / Parker Paints</p>
       <p class="eyebrow">Website Redesign</p>
@@ -79,15 +244,22 @@
         <button type="button" data-device="mobile" aria-pressed="false">Mobile</button>
       </div></div>
       <div class="device-stage" style="--c1:#c93434;--c2:#2b0f12">
-        <div class="device" id="device">
-          <div class="device-bar"><i></i><i></i><i></i><span>parkerpaints.co.zw</span></div>
-          <div class="shot" data-shot>
-                  <img class="shot-desktop" src="../assets/img/work/parker-paints-desktop.jpg" alt="Parker Paints website on desktop" width="1200" height="750">
-                  <img class="shot-mobile" src="../assets/img/work/parker-paints-mobile.jpg" alt="Parker Paints website on mobile" width="520" height="1126" loading="lazy" hidden>
-                </div>
+        <div class="live-browser" data-live data-src="https://tafadzwa-chingombe.github.io/Parker-Paints/">
+          <div class="lb-bar">
+            <span class="lb-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <button type="button" class="lb-btn" data-lb="back" aria-label="Back" disabled>&larr;</button>
+            <button type="button" class="lb-btn" data-lb="forward" aria-label="Forward" disabled>&rarr;</button>
+            <button type="button" class="lb-btn" data-lb="reload" aria-label="Reload">&#8635;</button>
+            <span class="lb-address" title="https://tafadzwa-chingombe.github.io/Parker-Paints/"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span class="lb-url">tafadzwa-chingombe.github.io/Parker-Paints/</span></span>
+            <a class="lb-btn lb-open" href="https://tafadzwa-chingombe.github.io/Parker-Paints/" target="_blank" rel="noopener" aria-label="Open in a new tab">&#8599;</a>
+          </div>
+          <div class="lb-viewport">
+            <img class="lb-poster" src="../assets/img/work/parker-paints-desktop.jpg" alt="" aria-hidden="true">
+            <div class="lb-loading" role="status"><span class="lb-spinner"></span>Loading the live site…</div>
+          </div>
         </div>
       </div>
-      <p class="small-note muted">Screenshots of the live site. <a href="https://tafadzwa-chingombe.github.io/Parker-Paints/" target="_blank" rel="noopener">Open the live preview &#8599;</a></p>
+      <p class="small-note muted">This is the real, live website &mdash; scroll it, click the menu and browse its pages. <a href="https://tafadzwa-chingombe.github.io/Parker-Paints/" target="_blank" rel="noopener">Open full screen &#8599;</a></p>
     </div>
   </section>
 

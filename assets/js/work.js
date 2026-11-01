@@ -111,3 +111,99 @@
   closeBtn && closeBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleZoom(false); });
   show(0);
 })();
+
+// ---- Live website preview (case studies with [data-live]) ----------------------
+// Embeds the real site in an iframe. Desktop renders at a true 1440px width and is
+// scaled to fit; mobile renders at 390px. Address bar + back/forward follow the
+// visitor's navigation when the preview is on the same origin (GitHub Pages).
+(function () {
+  var lb = document.querySelector('[data-live]');
+  if (!lb) return;
+  var src = lb.getAttribute('data-src');
+  var viewport = lb.querySelector('.lb-viewport');
+  var urlEl = lb.querySelector('.lb-url');
+  var openEl = lb.querySelector('.lb-open');
+  var btn = function (k) { return lb.querySelector('[data-lb="' + k + '"]'); };
+  var DESKTOP_W = 1440, MOBILE_W = 390;
+  var mobile = window.matchMedia('(max-width: 700px)').matches; // phones start in mobile view
+  var iframe = null, depth = 0, maxDepth = 0, navByButton = false;
+
+  var setToggle = function () {
+    document.querySelectorAll('.device-toggle [data-device]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String((b.getAttribute('data-device') === 'mobile') === mobile));
+    });
+    lb.classList.toggle('is-mobile', mobile);
+    var poster = lb.querySelector('.lb-poster');
+    if (poster) poster.src = poster.src.replace(/-(desktop|mobile)\.jpg$/, mobile ? '-mobile.jpg' : '-desktop.jpg');
+  };
+
+  var fit = function () {
+    if (!iframe) return;
+    var w = viewport.clientWidth, h = viewport.clientHeight;
+    var virtualW = mobile ? MOBILE_W : DESKTOP_W;
+    var scale = Math.min(1, w / virtualW);
+    iframe.style.width = virtualW + 'px';
+    iframe.style.height = Math.ceil(h / scale) + 'px';
+    iframe.style.transform = 'scale(' + scale + ')';
+  };
+
+  var readLocation = function () {
+    try { return iframe.contentWindow.location.href; } catch (e) { return null; } // cross-origin
+  };
+  var updateBar = function () {
+    var href = readLocation();
+    var shown = href || src;
+    urlEl.textContent = shown.replace(/^https?:\/\//, '');
+    lb.querySelector('.lb-address').title = shown;
+    openEl.href = shown;
+    var same = href !== null;
+    btn('back').disabled = !same || depth <= 0;
+    btn('forward').disabled = !same || depth >= maxDepth;
+  };
+
+  var load = function () {
+    if (iframe) return;
+    iframe = document.createElement('iframe');
+    iframe.title = 'Live preview of ' + (document.querySelector('h1') || {}).textContent;
+    iframe.setAttribute('loading', 'eager');
+    iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+    iframe.addEventListener('load', function () {
+      // give the site a moment to paint before revealing it over the screenshot
+      setTimeout(function () { lb.classList.add('is-loaded'); }, 700);
+      if (!navByButton && readLocation() !== null && lb.dataset.loads) { depth++; maxDepth = depth; }
+      navByButton = false;
+      lb.dataset.loads = '1';
+      updateBar();
+    });
+    iframe.src = src;
+    viewport.appendChild(iframe);
+    fit();
+  };
+
+  btn('back').addEventListener('click', function () { try { navByButton = true; depth = Math.max(0, depth - 1); iframe.contentWindow.history.back(); } catch (e) { navByButton = false; } });
+  btn('forward').addEventListener('click', function () { try { navByButton = true; depth = Math.min(maxDepth, depth + 1); iframe.contentWindow.history.forward(); } catch (e) { navByButton = false; } });
+  btn('reload').addEventListener('click', function () {
+    if (!iframe) return load();
+    lb.classList.remove('is-loaded'); navByButton = true;
+    try { iframe.contentWindow.location.reload(); } catch (e) { iframe.src = iframe.src; }
+  });
+
+  document.querySelector('.device-toggle') && document.querySelector('.device-toggle').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-device]');
+    if (!b) return;
+    mobile = b.getAttribute('data-device') === 'mobile';
+    setToggle();
+    requestAnimationFrame(fit);
+    setTimeout(fit, 450); // after the width transition
+  });
+  window.addEventListener('resize', fit);
+
+  setToggle();
+  // Only load the live site when the preview is about to scroll into view.
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      if (entries.some(function (en) { return en.isIntersecting; })) { load(); io.disconnect(); }
+    }, { rootMargin: '400px 0px' });
+    io.observe(lb);
+  } else { load(); }
+})();
