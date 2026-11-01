@@ -598,3 +598,8 @@ svg.inline { display: inline-block; width: 16px; height: 16px; vertical-align: -
 .logo-img { display: block; height: 38px; width: auto; }
 .site-footer .logo-img { height: 36px; }
 @media (max-width: 640px) { .nav .logo-img { height: 32px; } }
+
+/* About page photo */
+.portrait-photo { background: var(--ink-900); }
+.portrait-photo::after { display: none; }
+.portrait-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
