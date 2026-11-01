@@ -1028,3 +1028,36 @@ a.work-card { color: inherit; text-decoration: none; }
 .device.is-mobile .shot img { max-height: 720px; object-fit: cover; object-position: top; }
 @media (max-width: 960px) { .featured-case .fc-media { min-height: 260px; } }
 .shot img[hidden] { display: none; }
+
+/* ---------- Company profiles (document portfolio) ---------------------------------- */
+.work-cover.is-doc { background: linear-gradient(135deg, var(--c1), var(--c2)); }
+.work-cover.is-doc::before { display: none; }
+.work-cover.is-doc .doc { position: relative; height: 84%; aspect-ratio: var(--ar, 0.707); align-self: end; margin-bottom: -4%; border-radius: 4px 4px 0 0; overflow: hidden; box-shadow: 0 18px 40px rgb(0 0 0 / 35%); transform: rotate(-2deg) translateY(4%); transition: transform .45s var(--ease); background: #fff; }
+.work-cover.is-doc .doc img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.work-cover.is-doc .doc.back { position: absolute; left: 50%; bottom: 0; transform: translateX(-38%) rotate(5deg); opacity: .55; height: 78%; }
+.work-card:hover .work-cover.is-doc .doc:not(.back) { transform: rotate(0) translateY(0); }
+.chip.pdf::before { content: 'PDF'; font-size: 9px; font-weight: 800; padding: 1px 4px; border-radius: 3px; background: var(--error); color: #fff; }
+
+.book-stage { position: relative; display: grid; gap: 16px; padding: clamp(18px, 3vw, 36px); border-radius: 24px; background: linear-gradient(135deg, var(--c1), var(--c2)); box-shadow: var(--shadow-lg); }
+.book { position: relative; display: grid; place-items: center; min-height: 300px; cursor: zoom-in; touch-action: pan-y; }
+.book-page { margin: 0; }
+.book-page img { display: block; max-width: 100%; max-height: 78vh; width: auto; height: auto; border-radius: 4px; box-shadow: 0 24px 60px rgb(0 0 0 / 40%); background: #fff; }
+.book-page[hidden] { display: none; }
+.book-controls { display: flex; align-items: center; justify-content: center; gap: 14px; color: #fff; }
+.book-controls button { width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgb(255 255 255 / 35%); background: rgb(255 255 255 / 12%); color: #fff; font-size: 20px; transition: background .2s; }
+.book-controls button:hover:not(:disabled) { background: rgb(255 255 255 / 25%); }
+.book-controls button:disabled { opacity: .35; cursor: default; }
+.book-count { min-width: 110px; text-align: center; font-weight: 600; font-size: 14px; }
+.book-thumbs { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 8px; scrollbar-width: thin; }
+.book-thumbs button { flex: none; width: 64px; padding: 0; border: 2px solid transparent; border-radius: 4px; background: none; opacity: .65; transition: opacity .2s, border-color .2s; }
+.book-thumbs button[aria-current="true"] { border-color: var(--lime-500); opacity: 1; }
+.book-thumbs button:hover { opacity: 1; }
+.book-thumbs img { display: block; width: 100%; border-radius: 2px; }
+.book-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 16px; }
+.book-close { display: none; }
+.book-stage.is-zoomed { position: fixed; z-index: 100; inset: 0; border-radius: 0; overflow: auto; align-content: center; }
+.book-stage.is-zoomed .book { cursor: zoom-out; }
+.book-stage.is-zoomed .book-page img { max-height: 90vh; }
+.book-stage.is-zoomed .book-close { display: block; position: fixed; top: 16px; right: 16px; width: 46px; height: 46px; border-radius: 50%; border: 0; background: #fff; color: var(--ink-900); font-size: 24px; z-index: 101; }
+.book-zoomed { overflow: hidden; }
+@media (max-width: 640px) { .book-thumbs button { width: 52px; } }
