@@ -23,3 +23,14 @@ Preview locally:
 ```bash
 python3 -m http.server 8000
 ```
+
+## Brand assets (`assets/img/`)
+| File | Use |
+|---|---|
+| `icontact-logo.png` | Transparent logo — site header, light backgrounds |
+| `icontact-logo-white.png` | Transparent, white letters — footer, portal sidebar, dark backgrounds |
+| `icontact-logo-colour.png` | Logo on its solid light-grey background — documents, email signatures, anywhere transparency isn't supported |
+| `og-image.png` | Link preview when the site is shared (WhatsApp, Facebook, LinkedIn, X) |
+| `favicon-*.png`, `/favicon.ico`, `apple-touch-icon.png`, `icon-*.png` | Browser tab and phone home-screen icons |
+
+If the site moves to a custom domain, update the `og:url` / `og:image` addresses in each page's `<head>`.
