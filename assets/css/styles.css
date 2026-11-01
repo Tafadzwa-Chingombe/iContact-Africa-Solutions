@@ -1101,3 +1101,8 @@ a.work-card { color: inherit; text-decoration: none; }
 /* keep the decorative glow underneath the live browser so its buttons are clickable */
 .device-stage::before { pointer-events: none; }
 .live-browser { position: relative; z-index: 1; }
+/* Landscape documents (presentation-style brand manuals) */
+.work-cover.is-doc.is-landscape { align-items: center; }
+.work-cover.is-doc.is-landscape .doc { height: auto; width: 78%; aspect-ratio: var(--ar); align-self: center; margin: 0; border-radius: 6px; transform: rotate(-2deg); }
+.work-cover.is-doc.is-landscape .doc.back { left: auto; right: 6%; top: 14%; bottom: auto; width: 62%; height: auto; transform: rotate(5deg); }
+.work-card:hover .work-cover.is-doc.is-landscape .doc:not(.back) { transform: rotate(0) scale(1.03); }

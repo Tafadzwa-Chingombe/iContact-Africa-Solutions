@@ -54,7 +54,8 @@ if (list) {
         });
       }
     } catch {
-      list.innerHTML = '<p class="muted">Articles couldn’t load right now — please refresh in a moment.</p>';
+      // e.g. the blog table isn't set up yet: show the friendly "coming soon" state
+      list.hidden = true; empty.hidden = false;
     }
   })();
 }
