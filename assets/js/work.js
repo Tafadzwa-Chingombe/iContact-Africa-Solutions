@@ -49,6 +49,13 @@
       if (!b) return;
       toggle.querySelectorAll('[data-device]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
       device.classList.toggle('is-mobile', b.getAttribute('data-device') === 'mobile');
+      // Real screenshots: swap the desktop/mobile image
+      var shot = device.querySelector('[data-shot]');
+      if (shot) {
+        var mobile = b.getAttribute('data-device') === 'mobile';
+        shot.querySelector('.shot-desktop').hidden = mobile;
+        shot.querySelector('.shot-mobile').hidden = !mobile;
+      }
     });
   }
 })();

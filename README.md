@@ -30,7 +30,10 @@ Start with **[docs/CLIENT_PORTAL_SETUP.md](docs/CLIENT_PORTAL_SETUP.md)**.
 
 ## Portfolio & case studies
 - `work.html` — filterable portfolio (deep links like `work.html#gbp`), featured case study.
-- `work/<project>.html` — one case study per project with a desktop/mobile preview toggle.
+- `work/<project>.html` — one case study per project with a desktop/mobile preview toggle and an "Open live preview" link
+  to the project's GitHub Pages site (`https://tafadzwa-chingombe.github.io/<Repo>/`).
+- Screenshots live in `assets/img/work/<project>-desktop.jpg` / `-mobile.jpg` (1200×750 and 520px wide). Re-take them
+  when a client site changes.
 - Case-study text is a **draft** (marked with `<!-- DRAFT … -->` comments) — review it, and add confirmed results
   (enquiries, calls, rankings) where the `<!-- Add confirmed numbers here -->` comment sits. Replace the illustrative
   previews with real screenshots when you have them.
