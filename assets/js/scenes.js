@@ -144,12 +144,28 @@
       '<g class="sc-float" style="--d:1.5s"><circle cx="110" cy="320" r="36" class="sc-card"/>' + icon('lock', 110, 318, 1.2) + '</g></g>';
   };
 
+
+  S.careers = function () {
+    var steps = [['Learn', 120, 330], ['Build', 230, 260], ['Ship', 340, 190], ['Grow', 450, 120]];
+    var blocks = steps.map(function (st, i) {
+      var h = 440 - st[2];
+      return '<g class="sc-float" style="--d:' + (i * 0.5) + 's"><rect x="' + (st[1] - 46) + '" y="' + st[2] + '" width="92" height="' + h + '" rx="12" class="sc-card"/>' +
+        '<text x="' + st[1] + '" y="' + (st[2] + 32) + '" class="sc-label sc-step">' + st[0] + '</text></g>';
+    }).join('');
+    var path = 'M120 312 C175 312 175 242 230 242 S285 172 340 172 S395 102 450 102';
+    return '<g data-depth="7">' + blocks + '</g>' +
+      '<g data-depth="14"><path class="sc-route" d="' + path + '"/><path class="sc-route-live" d="' + path + '"/>' +
+      '<circle r="9" class="sc-walker"><animateMotion dur="6s" repeatCount="indefinite" path="' + path + '"/></circle></g>' +
+      '<g data-depth="22"><g class="sc-float" style="--d:.6s"><rect x="40" y="60" width="150" height="40" rx="20" class="sc-pill"/><text x="115" y="85" class="sc-pill-t">Harare · Hybrid</text></g>' +
+      '<g class="sc-float" style="--d:1.4s"><rect x="470" y="300" width="120" height="40" rx="20" class="sc-pill"/><text x="530" y="325" class="sc-pill-t">We’re hiring</text></g>' +
+      '<g class="sc-float" style="--d:2s"><circle cx="530" cy="60" r="30" class="sc-card"/>' + icon('monitor', 530, 60) + '</g></g>';
+  };
   S.tech = S.services;
 
   // ---------------------------------------------------------------- mount hero scene
   var page = (location.pathname.split('/').pop() || 'index.html').replace('.html', '');
   var map = { services: 'services', domains: 'domains', hosting: 'hosting', pricing: 'pricing', about: 'about',
-    blog: 'blog', contact: 'contact', privacy: 'legal', terms: 'legal', cookies: 'legal' };
+    blog: 'blog', contact: 'contact', careers: 'careers', privacy: 'legal', terms: 'legal', cookies: 'legal' };
   var hero = document.querySelector('.page-hero:not(.hero-bg)');
   if (hero) {
     var kind = hero.getAttribute('data-scene') || map[page] || 'tech';
