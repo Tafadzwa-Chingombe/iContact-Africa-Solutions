@@ -373,3 +373,14 @@ td.row-actions .btn + .btn { margin-left: 6px; }
 }
 /* Focus is moved to the view on navigation for screen readers; don't draw a ring around the page */
 .view:focus, .view:focus-visible { box-shadow: none; }
+
+/* Brand logo image */
+.logo-img { display: block; height: 34px; width: auto; }
+.logo { flex-direction: column; align-items: flex-start; gap: 6px; }
+.logo-tag { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--lime-500); }
+.auth-aside .logo-img { height: 40px; }
+.auth-mobile-logo { display: none; }
+@media (max-width: 900px) {
+  .auth-mobile-logo { display: block; margin-bottom: 18px; }
+  .auth-mobile-logo img { height: 34px; width: auto; }
+}

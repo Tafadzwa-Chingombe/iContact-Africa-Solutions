@@ -593,3 +593,8 @@ a.contact-card:hover { box-shadow: var(--shadow-sm); transform: translateY(-2px)
 
 /* inline icon inside text */
 svg.inline { display: inline-block; width: 16px; height: 16px; vertical-align: -3px; margin-right: 4px; }
+
+/* Brand logo image */
+.logo-img { display: block; height: 38px; width: auto; }
+.site-footer .logo-img { height: 36px; }
+@media (max-width: 640px) { .nav .logo-img { height: 32px; } }
