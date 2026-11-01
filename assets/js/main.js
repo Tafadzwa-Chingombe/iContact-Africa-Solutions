@@ -1,4 +1,14 @@
 // iContact Africa Solutions — shared site behaviour
+// Animated hero scenes + CTA background (loaded on every page)
+(function () {
+  var me = document.currentScript;
+  if (!me) return;
+  var sc = document.createElement('script');
+  sc.src = me.src.replace(/main\.js(\?.*)?$/, 'scenes.js');
+  sc.defer = true;
+  document.head.appendChild(sc);
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
   // ---- Mobile nav -----------------------------------------------------------
   const nav = document.querySelector('.nav');

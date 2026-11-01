@@ -1108,3 +1108,128 @@ a.work-card { color: inherit; text-decoration: none; }
 .work-cover.is-doc.is-landscape .doc { height: auto; width: 78%; aspect-ratio: var(--ar); align-self: center; margin: 0; border-radius: 6px; transform: rotate(-2deg); }
 .work-cover.is-doc.is-landscape .doc.back { left: auto; right: 6%; top: 14%; bottom: auto; width: 62%; height: auto; transform: rotate(5deg); }
 .work-card:hover .work-cover.is-doc.is-landscape .doc:not(.back) { transform: rotate(0) scale(1.03); }
+
+/* ==========================================================================
+   Animated page-hero scenes (assets/js/scenes.js) — tech & workspace theme
+   ========================================================================== */
+.page-hero.has-scene {
+  background:
+    radial-gradient(900px 500px at 85% 20%, rgb(59 107 179 / 45%), transparent 60%),
+    radial-gradient(600px 400px at 10% 100%, rgb(169 206 71 / 14%), transparent 60%),
+    linear-gradient(160deg, var(--brand-900) 0%, var(--ink-950) 70%);
+}
+.page-hero.has-scene .container { position: relative; }
+.scene { position: absolute; z-index: -1; top: 0; bottom: 0; right: 0; width: min(58%, 760px); pointer-events: none; display: grid; align-items: center;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 22%); mask-image: linear-gradient(90deg, transparent 0%, #000 22%); }
+.scene svg { width: 100%; height: 100%; max-height: 520px; overflow: visible; }
+.scene [data-depth] { transition: transform .05s linear; will-change: transform; }
+.scene.is-paused * { animation-play-state: paused !important; }
+
+/* shared shapes */
+.scene .sc-card { fill: rgb(255 255 255 / 6%); stroke: rgb(255 255 255 / 16%); stroke-width: 1.2; }
+.scene .sc-icon { fill: none; stroke: var(--lime-500); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.scene .sc-label, .scene .sc-small { fill: rgb(255 255 255 / 60%); font: 500 13px var(--font); text-anchor: middle; }
+.scene .sc-small { text-anchor: start; font-size: 12px; }
+.scene .sc-big { fill: #fff; font: 700 24px var(--font); }
+.scene .sc-orbit { fill: none; stroke: rgb(255 255 255 / 10%); stroke-dasharray: 3 9; transform-origin: 300px 200px; animation: sc-spin 60s linear infinite; }
+.scene .sc-orbit-2 { animation-direction: reverse; animation-duration: 90s; }
+.scene .sc-core { fill: var(--brand-600); stroke: rgb(255 255 255 / 25%); stroke-width: 2; }
+.scene .sc-core-t { fill: #fff; font: 700 22px var(--font); text-anchor: middle; }
+.scene .sc-link { fill: none; stroke: rgb(255 255 255 / 10%); stroke-width: 1.2; }
+.scene .sc-flow { fill: none; stroke: var(--lime-500); stroke-width: 2; stroke-dasharray: 6 14; opacity: .7; animation: sc-dash 2.4s linear infinite; animation-delay: var(--d, 0s); }
+.scene .sc-node { animation: sc-bob 6s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.scene .sc-float { animation: sc-bob 7s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.scene .sc-pill { fill: rgb(46 87 148 / 55%); stroke: rgb(169 206 71 / 55%); stroke-width: 1.2; }
+.scene .sc-pill-t { fill: #fff; font: 600 14px var(--font); text-anchor: middle; }
+.scene .sc-line { fill: rgb(255 255 255 / 18%); }
+.scene .sc-thumb { fill: rgb(59 107 179 / 45%); }
+.scene .sc-tag { fill: var(--lime-500); font: 600 16px 'JetBrains Mono', ui-monospace, monospace; opacity: .75; }
+
+/* domains */
+.scene .sc-globe { fill: rgb(46 87 148 / 18%); stroke: rgb(255 255 255 / 22%); stroke-width: 1.5; }
+.scene .sc-mer { fill: none; stroke: rgb(169 206 71 / 45%); stroke-width: 1.2; transform-box: fill-box; transform-origin: center; animation: sc-turn 8s linear infinite; animation-delay: var(--d, 0s); }
+.scene .sc-lat { fill: none; stroke: rgb(255 255 255 / 14%); }
+.scene .sc-search { fill: #fff; }
+.scene .sc-lens { fill: none; stroke: var(--grey-500); stroke-width: 2; stroke-linecap: round; }
+.scene .sc-type { fill: var(--ink-900); font: 500 15px var(--font); }
+.scene .sc-typing { clip-path: inset(0 100% 0 0); animation: sc-typeit 6s steps(18) infinite; }
+.scene .sc-caret { fill: var(--brand-600); animation: sc-caret 6s steps(18) infinite, sc-blink .8s step-end infinite; }
+
+/* hosting */
+.scene .sc-rack { fill: rgb(255 255 255 / 7%); stroke: rgb(255 255 255 / 18%); }
+.scene .sc-led { fill: var(--lime-500); animation: sc-blinkled 1.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.scene .sc-bar { fill: rgb(255 255 255 / 10%); }
+.scene .sc-bar-fill { fill: rgb(59 107 179 / 80%); transform-box: fill-box; transform-origin: left; animation: sc-load 4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.scene .sc-stream { fill: none; stroke: var(--lime-500); stroke-width: 2; stroke-dasharray: 4 10; animation: sc-dash-up 1.6s linear infinite; animation-delay: var(--d, 0s); opacity: .7; }
+.scene .sc-cloud { fill: rgb(255 255 255 / 9%); stroke: rgb(255 255 255 / 25%); stroke-width: 1.5; }
+.scene .sc-spark { fill: none; stroke: var(--lime-500); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 140; animation: sc-draw 5s ease-in-out infinite; }
+
+/* pricing */
+.scene .sc-axis { stroke: rgb(255 255 255 / 20%); }
+.scene .sc-rise { fill: rgb(59 107 179 / 70%); transform-box: fill-box; transform-origin: bottom; animation: sc-grow 5s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.scene .sc-rise:nth-child(6), .scene .sc-rise:nth-child(4) { fill: rgb(169 206 71 / 80%); }
+.scene .sc-trend { fill: none; stroke: #fff; stroke-width: 2.5; stroke-dasharray: 340; animation: sc-draw 5s ease-in-out infinite; opacity: .8; }
+
+/* about */
+.scene .sc-dot { fill: rgb(255 255 255 / 18%); }
+.scene .sc-arc { fill: none; stroke: var(--lime-500); stroke-width: 1.8; stroke-dasharray: 400; animation: sc-draw 4.5s ease-in-out infinite; animation-delay: var(--d, 0s); opacity: .8; }
+.scene .sc-end { fill: rgb(255 255 255 / 60%); }
+.scene .sc-pin { fill: var(--lime-500); stroke: #fff; stroke-width: 3; }
+.scene .sc-pulse, .scene .sc-ring { fill: none; stroke: var(--lime-500); stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: sc-pulse 2.4s ease-out infinite; animation-delay: var(--d, 0s); }
+
+/* contact */
+.scene .sc-msg { opacity: 0; animation: sc-msg 7.2s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.scene .sc-bubble { fill: rgb(255 255 255 / 92%); }
+.scene .sc-bubble-t { fill: var(--ink-900); font: 500 14px var(--font); }
+.scene .sc-bubble-me { fill: var(--brand-600); }
+.scene .sc-bubble-me-t { fill: #fff; font: 500 14px var(--font); }
+.scene .sc-typing-dot { fill: #fff; animation: sc-hop 1s ease-in-out infinite; animation-delay: var(--d, 0s); }
+
+/* legal */
+.scene .sc-shield { fill: rgb(46 87 148 / 45%); stroke: rgb(255 255 255 / 40%); stroke-width: 2; }
+.scene .sc-check { fill: none; stroke: var(--lime-500); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 110; animation: sc-draw 4s ease-in-out infinite; }
+
+@keyframes sc-spin { to { transform: rotate(360deg); } }
+@keyframes sc-dash { to { stroke-dashoffset: -40; } }
+@keyframes sc-dash-up { to { stroke-dashoffset: 28; } }
+@keyframes sc-bob { 50% { transform: translateY(-10px); } }
+@keyframes sc-turn { 0% { transform: scaleX(1); } 50% { transform: scaleX(.04); } 100% { transform: scaleX(1); } }
+@keyframes sc-typeit { 0%, 8% { clip-path: inset(0 100% 0 0); } 55%, 100% { clip-path: inset(0 0 0 0); } }
+@keyframes sc-caret { 0%, 8% { transform: translateX(0); } 55%, 100% { transform: translateX(var(--tw, 150px)); } }
+@keyframes sc-blink { 50% { opacity: 0; } }
+@keyframes sc-blinkled { 50% { opacity: .25; } }
+@keyframes sc-load { 0% { transform: scaleX(.15); } 50% { transform: scaleX(.95); } 100% { transform: scaleX(.15); } }
+@keyframes sc-draw { 0% { stroke-dashoffset: var(--len, 400); } 45%, 75% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: calc(var(--len, 400) * -1); } }
+@keyframes sc-grow { 0% { transform: scaleY(.25); } 45%, 75% { transform: scaleY(1); } 100% { transform: scaleY(.25); } }
+@keyframes sc-pulse { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(4); opacity: 0; } }
+@keyframes sc-msg { 0% { opacity: 0; transform: translateY(14px); } 10%, 80% { opacity: 1; transform: none; } 92%, 100% { opacity: 0; transform: translateY(-8px); } }
+@keyframes sc-hop { 50% { transform: translateY(-5px); } }
+.scene .sc-spark { --len: 140; } .scene .sc-trend { --len: 340; } .scene .sc-check { --len: 110; }
+
+@media (max-width: 960px) {
+  .scene { width: 100%; opacity: .32; -webkit-mask-image: none; mask-image: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene * { animation: none !important; }
+  .scene .sc-msg { opacity: 1; }
+  .scene .sc-typing { clip-path: none; }
+}
+
+/* ==========================================================================
+   CTA particle network (cta-card + help-band, every page)
+   ========================================================================== */
+.cta-card.has-canvas, .help-band.has-canvas { position: relative; isolation: isolate; overflow: hidden; }
+.cta-canvas { position: absolute; inset: 0; z-index: -1; display: block; }
+.cta-card.has-canvas { background: radial-gradient(600px 300px at 90% 0%, rgb(59 107 179 / 55%), transparent 60%), radial-gradient(500px 260px at 0% 100%, rgb(169 206 71 / 16%), transparent 60%), var(--ink-900); }
+.cta-card.has-canvas::before { z-index: -2; }
+/* keep hero copy and the animated scene side by side on desktop */
+@media (min-width: 961px) {
+  .page-hero.has-scene .scene { width: min(50%, 700px); -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 14%); mask-image: linear-gradient(90deg, transparent 0%, #000 14%); }
+  .page-hero.has-scene .container > h1,
+  .page-hero.has-scene .container > .lead { max-width: min(600px, 52%); }
+}
+/* phones/tablets: scene sits low and fades out behind the headline for legibility */
+@media (max-width: 960px) {
+  .page-hero.has-scene .scene { opacity: .26; align-items: end; -webkit-mask-image: linear-gradient(180deg, transparent 0%, transparent 35%, #000 85%); mask-image: linear-gradient(180deg, transparent 0%, transparent 35%, #000 85%); }
+  .page-hero.has-scene .scene svg { max-height: 60%; }
+}
