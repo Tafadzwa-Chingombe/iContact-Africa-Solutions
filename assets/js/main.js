@@ -7,6 +7,11 @@
   sc.src = me.src.replace(/main\.js(\?.*)?$/, 'scenes.js');
   sc.defer = true;
   document.head.appendChild(sc);
+  // Cookieless visit counter for Admin → Live traffic
+  var tr = document.createElement('script');
+  tr.type = 'module';
+  tr.src = me.src.replace(/main\.js(\?.*)?$/, 'track.js');
+  document.head.appendChild(tr);
 })();
 
 document.addEventListener('DOMContentLoaded', () => {

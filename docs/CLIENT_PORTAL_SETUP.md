@@ -85,6 +85,61 @@ Articles appear at `/blog.html` and `/article.html?slug=your-article`. Images ar
    automatically (hidden 60 days later). Use **Close now** to stop applications early, **Duplicate** to reuse a role.
 4. Applications go to chingombet@gmail.com (set `CAREERS_EMAIL` in `assets/js/careers.js` to change).
 
+## Live traffic (website analytics)
+1. One-time: run `supabase/migrations/20261103_analytics_zoho.sql` in Supabase → SQL Editor (already in `schema.sql`).
+2. That's it. Every public page loads `assets/js/track.js`, which records a page view in `page_views`.
+   **Admin Console → Live traffic** shows who's on the site right now (refreshes every 15 s, plus a live feed),
+   visitors and page views per day, top pages, where visitors come from, devices and time zones.
+3. Privacy: no cookies, no IP addresses, no cross-site tracking. A random id lives in the tab's session storage
+   only. Visitors with Do Not Track / Global Privacy Control aren't counted, and neither are browsers signed in
+   to the portal (so your own visits don't skew the numbers). The Cookie and Privacy pages say this.
+4. Visits from `localhost` aren't recorded, so local testing doesn't pollute your stats.
+
+## Billing ↔ Zoho Invoice
+The Billing tab can import every invoice from Zoho Invoice, create portal invoices in Zoho, and record
+"Mark paid" as a Zoho payment. Your Zoho keys live only in Supabase secrets, never in the website.
+
+1. Run `supabase/migrations/20261103_analytics_zoho.sql` (see above) if you haven't.
+2. Find your **data centre**: the domain you sign in to Zoho on — `zoho.com` → `com`, `zoho.eu` → `eu`,
+   `zoho.in` → `in`, `zoho.com.au` → `com.au`. Find your **Organisation ID** in Zoho Invoice →
+   Settings → Organisation Profile.
+3. Go to the Zoho API Console (`https://api-console.zoho.<dc>`) → **Add Client → Self Client** → Create.
+   Copy the **Client ID** and **Client Secret**.
+4. In the Self Client, open **Generate Code**. Scope:
+   `ZohoInvoice.invoices.ALL,ZohoInvoice.contacts.ALL,ZohoInvoice.customerpayments.CREATE`,
+   duration 10 minutes, then **Create**, and copy the code.
+5. Swap the code for a long-lived refresh token (within 10 minutes). Run this on your own computer,
+   replacing the CAPITALS:
+   ```bash
+   curl -X POST "https://accounts.zoho.DC/oauth/v2/token?grant_type=authorization_code&client_id=CLIENT_ID&client_secret=CLIENT_SECRET&code=CODE"
+   ```
+   Copy the `refresh_token` from the reply.
+6. Supabase → **Edge Functions → Secrets** → add `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`,
+   `ZOHO_REFRESH_TOKEN`, `ZOHO_ORG_ID` and `ZOHO_DC`. Don't paste these into chat, email or the website.
+7. Deploy the functions:
+   ```bash
+   supabase functions deploy zoho-sync
+   supabase functions deploy invite-client
+   ```
+8. Open **Admin Console → Billing**. You should see "Zoho Invoice connected". Click **Sync now**. After that,
+   Billing syncs automatically each time you open it (at most every 15 minutes).
+
+How the sync works:
+- **Zoho → portal:** every Zoho invoice is imported or updated (number, amount, balance, dates, status and
+  Zoho's online invoice/payment link). Zoho customers are matched to portal clients by email. Invoices for
+  customers with no portal login appear under the **Unlinked** filter. Use **Link client** to attach one
+  (the link is remembered for that customer's future invoices).
+- **Portal → Zoho:** a new invoice made in the portal has "Create in Zoho Invoice too" ticked by default.
+  Zoho creates the customer if needed and assigns the invoice number, which the portal then uses.
+- **Mark paid** on a Zoho invoice records a payment for the outstanding balance in Zoho.
+- For invoices that came from Zoho, change amounts and dates **in Zoho**. The next sync overwrites them in the portal.
+
+## Creating clients and projects from an invoice
+In **Billing → New invoice**, choose **+ New client…** or **+ New project…** in the dropdowns to create them
+inline. Leave "Email them a Client Portal invite" unticked for a billing-only client. You can invite them
+later from **Clients → Invite client** with the same email; they'll get a sign-in link.
+(This uses the `invite-client` function, so redeploy it after updating, as in step 7 above.)
+
 ## Testing the security rules (optional)
 `supabase/tests/` contains a Postgres test suite that impersonates clients, another client, anonymous
 visitors and the admin to prove each can only see/do what they should:

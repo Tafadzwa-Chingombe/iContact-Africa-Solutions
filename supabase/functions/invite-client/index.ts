@@ -28,16 +28,28 @@ Deno.serve(async (req) => {
   const { data: caller } = await admin.from('profiles').select('role').eq('id', user.id).single();
   if (caller?.role !== 'admin') return json({ error: 'Admins only' }, 403);
 
-  // 2. Validate input.
-  const { email, full_name, company, redirectTo } = await req.json().catch(() => ({}));
+  // 2. Validate input. `invite: false` creates a billing-only client (no email sent yet).
+  const { email, full_name, company, phone, redirectTo, invite = true } = await req.json().catch(() => ({}));
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: 'Valid email required' }, 400);
+  const meta = { full_name: full_name || '', company: company || '' };
 
-  // 3. Send the invite. The DB trigger creates the profile row from this metadata.
-  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: { full_name: full_name || '', company: company || '' },
-    redirectTo,
-  });
+  // Already has an account? Return it (and send a sign-in link if an invite was asked for).
+  const { data: existing } = await admin.from('profiles').select('id, role').ilike('email', email).maybeSingle();
+  if (existing) {
+    if (invite) {
+      const anon = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { auth: { persistSession: false } });
+      const { error } = await anon.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: redirectTo } });
+      if (error) return json({ error: error.message }, 400);
+    }
+    return json({ id: existing.id, email, existing: true, invited: !!invite });
+  }
+
+  // 3. Create the account. The DB trigger creates the profile row from this metadata.
+  const { data, error } = invite
+    ? await admin.auth.admin.inviteUserByEmail(email, { data: meta, redirectTo })
+    : await admin.auth.admin.createUser({ email, user_metadata: meta, email_confirm: false });
   if (error) return json({ error: error.message }, 400);
+  if (phone && data.user) await admin.from('profiles').update({ phone }).eq('id', data.user.id);
 
-  return json({ id: data.user?.id, email });
+  return json({ id: data.user?.id, email, invited: !!invite });
 });

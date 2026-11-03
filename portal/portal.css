@@ -428,3 +428,39 @@ td.row-actions .btn + .btn { margin-left: 6px; }
 .job-side { position: sticky; top: 90px; }
 .job-side-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--grey-100); }
 @media (max-width: 1100px) { .job-editor { grid-template-columns: 1fr; } .job-side { position: static; } }
+
+/* ---------- Live traffic (analytics) ---------- */
+.live-dot-lg { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--success, #168a55); margin-right: 8px; vertical-align: 1px; box-shadow: 0 0 0 0 rgb(22 138 85 / .5); animation: livePulse 1.8s infinite; }
+@keyframes livePulse { 0% { box-shadow: 0 0 0 0 rgb(22 138 85 / .45); } 70% { box-shadow: 0 0 0 8px rgb(22 138 85 / 0); } 100% { box-shadow: 0 0 0 0 rgb(22 138 85 / 0); } }
+@media (prefers-reduced-motion: reduce) { .live-dot-lg { animation: none; } }
+.live-kpi.pulse-once { box-shadow: 0 0 0 3px var(--lime-300); transition: box-shadow .3s; }
+.nav-count.live-dot { background: #d7f0e2; color: #0f6b41; }
+.list-dot.live { background: var(--success, #168a55); }
+.an-grid { align-items: start; }
+.live-list, .feed-list { max-height: 360px; overflow: auto; }
+.an-chart { position: relative; }
+.an-chart svg { display: block; height: auto; overflow: visible; }
+.an-grid-line { stroke: var(--grey-200); stroke-width: 1; }
+.an-axis { fill: var(--grey-500); font-size: 11px; font-family: inherit; }
+.an-colbar { fill: var(--brand-600); }
+.an-hit { fill: transparent; }
+.an-col:hover .an-colbar { fill: var(--brand-800); }
+.an-tip { position: absolute; top: -6px; transform: translate(-50%, -100%); background: var(--ink-900); color: #fff; font-size: 12.5px; padding: 6px 10px; border-radius: 8px; white-space: nowrap; pointer-events: none; box-shadow: var(--shadow-sm); }
+.an-bars { width: 100%; border-collapse: collapse; font-size: 14px; }
+.an-bars td { padding: 7px 0; vertical-align: middle; }
+.an-bars td.num { text-align: right; padding-left: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; width: 1%; }
+.an-bar-label span:first-child { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 34ch; }
+.an-bar { display: block; height: 6px; margin-top: 5px; border-radius: 3px; width: var(--w); background: var(--brand-500); }
+.an-note { margin-top: 6px; }
+
+/* ---------- Billing: Zoho + inline create ---------- */
+.zoho-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: -4px 0 16px; }
+.zoho-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--grey-100); color: var(--slate-700); }
+.zoho-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--grey-300); }
+.zoho-pill.ok { background: #e3f4ea; color: #0f6b41; }
+.zoho-pill.ok::before { background: var(--success, #168a55); }
+.badge-zoho { background: #fff1e0; color: #9a4b00; font-size: 11px; vertical-align: 1px; }
+.inline-new { border: 1px dashed var(--brand-100); background: var(--brand-050); border-radius: var(--r-md, 12px); padding: 12px 14px 4px; margin: 0 0 14px; display: grid; gap: 4px; }
+.inline-new legend { font-size: 13px; font-weight: 700; color: var(--brand-700); padding: 0 6px; }
+.inline-new .check-inline { margin-bottom: 10px; }
+#an-body { display: grid; gap: 22px; align-content: start; }

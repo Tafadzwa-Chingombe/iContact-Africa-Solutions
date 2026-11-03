@@ -139,3 +139,33 @@ reset request.jwt.claim.sub; set role anon;
 select title from jobs;
 insert into jobs (title) values ('anon role');
 reset role;
+
+\echo '===== ANALYTICS (page_views) ====='
+set role anon;
+\echo 'anon records a view (expect INSERT 0 1):'
+insert into page_views (id, session_id, path, device) values ('11111111-1111-1111-1111-111111111111', 'sess-aaaaaaaa', '/index.html', 'desktop');
+\echo 'anon cannot back-date a view (expect ERROR rls):'
+insert into page_views (session_id, path, created_at) values ('sess-bbbbbbbb', '/x', now() - interval '1 day');
+\echo 'anon cannot read views (expect 0):'
+select count(*) from page_views;
+\echo 'anon heartbeat works for its own row only (expect no error):'
+select pv_ping('11111111-1111-1111-1111-111111111111', 'sess-aaaaaaaa');
+\echo 'anon cannot run the dashboard (expect ERROR permission denied):'
+select analytics_summary(30);
+set role authenticated; set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000c1';
+\echo 'client cannot read views or the dashboard (expect 0, then ERROR Admins only):'
+select count(*) from page_views;
+select analytics_summary(30);
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+\echo 'admin dashboard (expect views 1, visitors 1, live 1):'
+select s->'views' views, s->'visitors' visitors, s->'live' live from analytics_summary(30) s;
+\echo 'admin live list (expect 1 row /index.html):'
+select path, pages from analytics_live();
+\echo 'admin can store a Zoho-only invoice with no portal client (expect INSERT 0 1):'
+insert into invoices (number, amount, source, zoho_invoice_id, customer_name) values ('INV-Z-1', 50, 'zoho', 'z1', 'Walk-in Ltd');
+\echo 'duplicate Zoho id rejected (expect ERROR duplicate key):'
+insert into invoices (number, amount, source, zoho_invoice_id) values ('INV-Z-2', 50, 'zoho', 'z1');
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000c1';
+\echo 'client cannot see unlinked Zoho invoice (expect 0):'
+select count(*) from invoices where zoho_invoice_id = 'z1';
+reset role;

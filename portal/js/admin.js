@@ -7,12 +7,13 @@ import { SUPABASE_URL } from './config.js';
 import { initShell, openModal, closeModal, withBusy, emptyState, stageTracker } from './shell.js';
 import { blogView, loadPosts } from './admin-blog.js';
 import { careersView, loadJobs } from './admin-careers.js';
+import { analyticsView, bindAnalytics, stopAnalytics, startLiveBadge } from './admin-analytics.js';
 
 const { session, profile } = await requireSession({ admin: true });
 const me = session.user.id;
 const view = document.getElementById('view');
 
-const state = { clients: [], projects: [], invoices: [], files: [], tickets: [], enquiries: [], posts: [], jobs: { rows: [] } };
+const state = { clients: [], projects: [], invoices: [], files: [], tickets: [], enquiries: [], posts: [], jobs: { rows: [] }, zoho: null };
 
 async function load() {
   const q = await Promise.all([
@@ -37,6 +38,7 @@ const client = (id) => state.clients.find((c) => c.id === id);
 const project = (id) => state.projects.find((p) => p.id === id);
 const clientName = (id) => { const c = client(id); return c ? (c.company || c.full_name || c.email) : '—'; };
 const clients = () => state.clients.filter((c) => c.role === 'client');
+const invoiceClient = (i) => (i.client_id ? clientName(i.client_id) : (i.customer_name || i.customer_email || 'Not linked'));
 const needsReply = () => state.tickets.filter((t) => t.status !== 'closed' && t.ticket_messages.length
   && client(t.ticket_messages.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].author_id)?.role !== 'admin');
 const pending = () => state.files.filter((f) => f.needs_approval && f.approval !== 'approved');
@@ -134,9 +136,26 @@ const views = {
   },
 
   billing() {
+    const filter = sessionStorage.getItem('billingFilter') || 'all';
+    const list = state.invoices.filter((i) => (filter === 'all' ? true : filter === 'unlinked' ? !i.client_id : filter === 'zoho' ? !!i.zoho_invoice_id : filter === 'outstanding' ? ['unpaid', 'overdue'].includes(i.status) : true));
+    const z = state.zoho;
+    const zohoLine = !z ? '<span class="muted small">Checking Zoho Invoice…</span>'
+      : z.configured ? `<span class="zoho-pill ok">Zoho Invoice connected</span><span class="muted small">${z.last_synced_at ? `Last sync ${ago(z.last_synced_at)}` : 'Not synced yet'}</span><button class="btn btn-outline btn-sm" data-act="zoho-pull">Sync now</button>`
+      : z.error ? `<span class="zoho-pill">Zoho sync unavailable</span><span class="muted small">${esc(z.error)}</span>`
+      : '<span class="zoho-pill">Zoho Invoice not connected</span><span class="muted small">Add your Zoho API secrets to sync — see the setup guide.</span>';
+    const unlinked = state.invoices.filter((i) => !i.client_id).length;
     return `
-      <div class="toolbar"><span></span><button class="btn btn-primary" data-act="invoice">New invoice</button></div>
-      <section class="card">${invoiceTable(state.invoices, true)}</section>`;
+      <div class="toolbar">
+        <div class="segmented" role="tablist">${['all', 'outstanding', 'zoho', 'unlinked'].map((f) => `<button data-bfilter="${f}" class="${f === filter ? 'on' : ''}">${f}${f === 'unlinked' && unlinked ? ` (${unlinked})` : ''}</button>`).join('')}</div>
+        <button class="btn btn-primary" data-act="invoice">New invoice</button>
+      </div>
+      <div class="zoho-bar">${zohoLine}</div>
+      <section class="card">${invoiceTable(list, true)}</section>`;
+  },
+
+  analytics() {
+    setTimeout(() => bindAnalytics());
+    return analyticsView();
   },
 
   careers(id) {
@@ -165,12 +184,13 @@ function invoiceTable(list, showClient) {
   return list.length ? `<div class="table-wrap"><table class="table">
     <thead><tr><th>Invoice</th>${showClient ? '<th>Client</th>' : ''}<th>Issued</th><th>Due</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead>
     <tbody>${list.map((i) => `<tr>
-      <td><strong>${esc(i.number)}</strong>${i.description ? `<span class="muted block">${esc(i.description)}</span>` : ''}</td>
-      ${showClient ? `<td><a href="#clients/${i.client_id}">${esc(clientName(i.client_id))}</a></td>` : ''}
+      <td><strong>${esc(i.number)}</strong>${i.zoho_invoice_id ? ' <span class="badge badge-zoho" title="Synced with Zoho Invoice">Zoho</span>' : ''}${i.description ? `<span class="muted block">${esc(i.description)}</span>` : ''}</td>
+      ${showClient ? `<td>${i.client_id ? `<a href="#clients/${i.client_id}">${esc(clientName(i.client_id))}</a>` : `<span class="muted">${esc(invoiceClient(i))}</span> <button class="btn btn-ghost btn-sm" data-act="invoice" data-id="${i.id}">Link client</button>`}</td>` : ''}
       <td>${date(i.issued_on)}</td><td>${date(i.due_on)}</td>
-      <td class="num">${money(i.amount, i.currency)}</td><td>${statusBadge(i.status)}</td>
+      <td class="num">${money(i.amount, i.currency)}${i.balance != null && Number(i.balance) > 0 && Number(i.balance) < Number(i.amount) ? `<span class="muted block">${money(i.balance, i.currency)} due</span>` : ''}</td><td>${statusBadge(i.status)}</td>
       <td class="row-actions">
         ${i.pdf_path ? `<button class="btn btn-ghost btn-sm" data-pdf="${esc(i.pdf_path)}">PDF</button>` : ''}
+        ${i.pay_url ? `<a class="btn btn-ghost btn-sm" href="${esc(i.pay_url)}" target="_blank" rel="noopener">${i.zoho_invoice_id ? 'View' : 'Pay link'}</a>` : ''}
         ${['unpaid', 'overdue'].includes(i.status) ? `<button class="btn btn-ghost btn-sm" data-paid="${i.id}">Mark paid</button>` : ''}
         <button class="btn btn-ghost btn-sm" data-act="invoice" data-id="${i.id}">Edit</button>
       </td></tr>`).join('')}</tbody></table></div>`
@@ -412,17 +432,84 @@ function nextInvoiceNumber() {
   return `INV-${year}-${String((nums.length ? Math.max(...nums) : 0) + 1).padStart(3, '0')}`;
 }
 
+// Create a client account from inside another form (invoice). invite=false → billing-only, no email yet.
+async function createClientAccount({ email, full_name, company, phone, invite }) {
+  const { data: { session: s } } = await supabase.auth.getSession();
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/invite-client`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.access_token}` },
+    body: JSON.stringify({ email, full_name, company, phone, invite, redirectTo: new URL('login.html', location.href).href }),
+  }).catch((err) => ({ ok: false, json: async () => ({ error: err.message }) }));
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok || !out.id) throw new Error(out.error || 'Could not create the client');
+  return out;
+}
+
+async function zohoCall(action, extra = {}) {
+  const { data: { session: s } } = await supabase.auth.getSession();
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/zoho-sync`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.access_token}` },
+    body: JSON.stringify({ action, ...extra }),
+  }).catch(() => ({ ok: false, status: 0, json: async () => ({ error: 'Can’t reach the zoho-sync function — has it been deployed?' }) }));
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(out.error || (res.status === 404 ? 'The zoho-sync function isn’t deployed yet' : `Zoho sync failed (${res.status})`));
+  return out;
+}
+
+async function loadZohoStatus() {
+  try { state.zoho = await zohoCall('status'); } catch (err) { state.zoho = { configured: false, error: err.message }; }
+  return state.zoho;
+}
+
+async function zohoPull({ quiet } = {}) {
+  const btn = document.querySelector('[data-act="zoho-pull"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
+  try {
+    const r = await zohoCall('pull');
+    state.zoho = { ...state.zoho, configured: true, last_synced_at: r.synced_at };
+    if (!quiet || r.created) toast(`Zoho sync: ${r.created} new, ${r.updated} updated${r.linked_clients ? `, ${r.linked_clients} clients matched` : ''}`);
+    await load(); if (route === 'billing') render();
+  } catch (err) { if (!quiet) toast(err.message, 'error'); if (btn) { btn.disabled = false; btn.textContent = 'Sync now'; } }
+}
+
 function invoiceForm({ id, client: clientId }) {
   const due = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
   const i = id ? state.invoices.find((x) => x.id === id)
     : { client_id: clientId, number: nextInvoiceNumber(), currency: 'USD', status: 'unpaid', issued_on: new Date().toISOString().slice(0, 10), due_on: due };
+  const noClients = !clients().length;
+  const zohoOn = state.zoho?.configured;
   const body = openModal(`
     <h2>${id ? `Edit ${esc(i.number)}` : 'New invoice'}</h2>
+    ${i.zoho_invoice_id ? '<p class="muted small">Synced from Zoho Invoice — amounts, dates and status are updated from Zoho on every sync. Edit those in Zoho; here you can link the client and project.</p>' : ''}
     <form class="form">
       <div class="field-row">
-        <label class="field"><span>Client</span><select name="client_id" required>${clientOpts(i.client_id)}</select></label>
-        <label class="field"><span>Project (optional)</span><select name="project_id"><option value="">—</option>${projectOpts(i.client_id, i.project_id)}</select></label>
+        <label class="field"><span>Client</span><select name="client_id" ${i.zoho_invoice_id ? '' : 'required'}>
+          ${id && !i.client_id ? `<option value="">— Not linked${i.customer_name ? ` (Zoho: ${esc(i.customer_name)})` : ''} —</option>` : noClients ? '' : '<option value="" disabled selected hidden>Choose a client…</option>'}
+          ${clientOpts(i.client_id)}<option value="__new" ${noClients && !id ? 'selected' : ''}>+ New client…</option></select></label>
+        <label class="field"><span>Project (optional)</span><select name="project_id"><option value="">—</option>${projectOpts(i.client_id, i.project_id)}<option value="__new">+ New project…</option></select></label>
       </div>
+      <fieldset class="inline-new" data-new="client" ${noClients && !id ? '' : 'hidden'}>
+        <legend>New client</legend>
+        <div class="field-row">
+          <label class="field"><span>Email</span><input type="email" name="nc_email" value="${esc(i.customer_email || '')}" placeholder="client@company.co.zw"></label>
+          <label class="field"><span>Phone</span><input name="nc_phone" placeholder="077 123 4567"></label>
+        </div>
+        <div class="field-row">
+          <label class="field"><span>Full name</span><input name="nc_full_name"></label>
+          <label class="field"><span>Company</span><input name="nc_company" value="${esc(i.customer_name || '')}"></label>
+        </div>
+        <label class="check-inline"><input type="checkbox" name="nc_invite"> <span>Email them a Client Portal invite now<small class="muted block">Leave unticked for a billing-only client — you can invite them later from Clients.</small></span></label>
+      </fieldset>
+      <fieldset class="inline-new" data-new="project" hidden>
+        <legend>New project</legend>
+        <div class="field-row">
+          <label class="field"><span>Project name</span><input name="np_name" placeholder="Company website"></label>
+          <label class="field"><span>Service</span><input name="np_service" list="services" placeholder="Website"></label>
+        </div>
+        <datalist id="services"><option>Website</option><option>E-commerce</option><option>SEO</option><option>Digital Marketing</option><option>Brand &amp; Design</option><option>Paid Advertising</option><option>Google Business Profile</option><option>Hosting</option></datalist>
+        <label class="check-inline"><input type="checkbox" name="np_defaults" checked> Add default milestones</label>
+      </fieldset>
       <div class="field-row">
         <label class="field"><span>Invoice no.</span><input name="number" required value="${esc(i.number)}"></label>
         <label class="field"><span>Status</span><select name="status">${['draft', 'unpaid', 'paid', 'overdue', 'void'].map((s) => `<option ${s === i.status ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
@@ -430,7 +517,7 @@ function invoiceForm({ id, client: clientId }) {
       <label class="field"><span>Description</span><input name="description" value="${esc(i.description)}" placeholder="50% deposit — website build"></label>
       <div class="field-row">
         <label class="field"><span>Amount</span><input name="amount" type="number" min="0" step="0.01" required value="${esc(i.amount)}"></label>
-        <label class="field"><span>Currency</span><select name="currency">${['USD', 'ZWG', 'ZAR'].map((c) => `<option ${c === i.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+        <label class="field"><span>Currency</span><select name="currency">${[...new Set(['USD', 'ZWG', 'ZAR', i.currency])].map((c) => `<option ${c === i.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
       </div>
       <div class="field-row">
         <label class="field"><span>Issued</span><input type="date" name="issued_on" value="${esc(i.issued_on)}"></label>
@@ -438,32 +525,84 @@ function invoiceForm({ id, client: clientId }) {
       </div>
       <label class="field"><span>Payment link (Paynow, PayPal, Stripe…)</span><input type="url" name="pay_url" value="${esc(i.pay_url)}" placeholder="https://"></label>
       <label class="field"><span>Invoice PDF ${i.pdf_path ? '(replace)' : ''}</span><input type="file" name="pdf" accept="application/pdf"></label>
+      ${!i.zoho_invoice_id && zohoOn ? `<label class="check-inline"><input type="checkbox" name="to_zoho" ${id ? '' : 'checked'}> ${id ? 'Also create this invoice in Zoho Invoice' : 'Create in Zoho Invoice too (Zoho assigns the invoice number)'}</label>` : ''}
       <div class="btn-row">
         <button class="btn btn-primary" type="submit">${id ? 'Save' : 'Create invoice'}</button>
         ${id ? `<button class="btn btn-ghost danger" type="button" data-delinvoice="${id}">Delete</button>` : ''}
       </div>
     </form>`);
   const form = body.querySelector('form');
-  form.client_id.addEventListener('change', () => {
-    form.project_id.innerHTML = `<option value="">—</option>${projectOpts(form.client_id.value)}`;
-  });
+  const box = (k) => form.querySelector(`[data-new="${k}"]`);
+  const syncNew = () => {
+    const newClient = form.client_id.value === '__new';
+    box('client').hidden = !newClient;
+    form.nc_email.required = newClient;
+    if (form.project_id.value !== '__new' || newClient) {
+      const keep = form.project_id.value;
+      form.project_id.innerHTML = `<option value="">—</option>${newClient ? '' : projectOpts(form.client_id.value)}<option value="__new">+ New project…</option>`;
+      if (keep === '__new') form.project_id.value = '__new';
+    }
+    box('project').hidden = form.project_id.value !== '__new';
+    form.np_name.required = form.project_id.value === '__new';
+  };
+  form.client_id.addEventListener('change', () => { syncNew(); if (form.client_id.value === '__new') form.nc_email.focus(); });
+  form.project_id.addEventListener('change', () => { syncNew(); if (form.project_id.value === '__new') form.np_name.focus(); });
+  syncNew();
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const v = formData(form);
-    const pdf = form.pdf.files[0]; delete v.pdf;
+    const pdf = form.pdf.files[0];
+    const extra = Object.fromEntries(Object.entries(v).filter(([k]) => /^(nc_|np_)|^to_zoho$|^pdf$/.test(k)));
+    Object.keys(extra).forEach((k) => delete v[k]);
     v.amount = Number(v.amount);
+    if (!v.client_id) v.client_id = null;
+    if (!v.project_id) v.project_id = null;
     if (v.status === 'paid' && !i.paid_on) v.paid_on = new Date().toISOString().slice(0, 10);
     await withBusy(form, async () => {
-      if (pdf) {
-        const path = storageKey(`invoices/${v.client_id}`, pdf);
-        const up = await supabase.storage.from(STORAGE_BUCKET).upload(path, pdf, { contentType: 'application/pdf' });
-        if (up.error) return toast(up.error.message, 'error');
-        v.pdf_path = path;
+      try {
+        // 1. New client?
+        if (v.client_id === '__new') {
+          const c = await createClientAccount({ email: extra.nc_email, full_name: extra.nc_full_name, company: extra.nc_company, phone: extra.nc_phone, invite: !!extra.nc_invite });
+          v.client_id = c.id;
+          toast(c.existing ? `${extra.nc_email} already had an account — invoice linked to it` : c.invited ? `Client created and invite sent to ${extra.nc_email}` : 'Client created (billing only)');
+        }
+        // 2. New project?
+        if (v.project_id === '__new') {
+          if (!v.client_id) throw new Error('Choose or create a client before adding a project');
+          const { data: pr, error } = await supabase.from('projects').insert({ client_id: v.client_id, name: extra.np_name, service: extra.np_service || null, stage: 'scope', progress: 0 }).select().single();
+          if (error) throw error;
+          if (extra.np_defaults) {
+            await supabase.from('milestones').insert(['Scoping call & fixed quote', 'Design sign-off', 'Build complete', 'Launch & handover']
+              .map((title, n) => ({ project_id: pr.id, title, sort_order: n, done: n === 0 })));
+          }
+          v.project_id = pr.id;
+        }
+        // 3. PDF + invoice row
+        if (pdf) {
+          const path = storageKey(`invoices/${v.client_id || 'unlinked'}`, pdf);
+          const up = await supabase.storage.from(STORAGE_BUCKET).upload(path, pdf, { contentType: 'application/pdf' });
+          if (up.error) throw up.error;
+          v.pdf_path = path;
+        }
+        // Zoho owns its invoices' money fields — only send the links for those.
+        const patch = i.zoho_invoice_id ? { client_id: v.client_id, project_id: v.project_id, ...(v.pdf_path ? { pdf_path: v.pdf_path } : {}), pay_url: v.pay_url || i.pay_url } : v;
+        const q = id ? supabase.from('invoices').update(patch).eq('id', id).select().single() : supabase.from('invoices').insert(v).select().single();
+        const { data: saved, error } = await q;
+        if (error) throw error;
+        // 4. Zoho
+        if (extra.to_zoho) {
+          try { const z = await zohoCall('push', { invoice_id: saved.id }); toast(`Created in Zoho as ${z.number}`); }
+          catch (err) { toast(`Saved in the portal, but Zoho said: ${err.message}`, 'error'); }
+        }
+        closeModal(); toast(id ? 'Invoice saved' : 'Invoice created'); await load(); render();
+      } catch (err) {
+        toast(err.message, 'error');
+        await load(); // a client/project may have been created before the failure — keep the lists current
+        if (v.client_id && v.client_id !== '__new' && !clients().some((c) => c.id === form.client_id.value)) {
+          form.client_id.insertAdjacentHTML('afterbegin', clientOpts(v.client_id)); form.client_id.value = v.client_id; syncNew();
+        }
       }
-      const q = id ? supabase.from('invoices').update(v).eq('id', id) : supabase.from('invoices').insert(v);
-      const { error } = await q;
-      if (error) return toast(error.message, 'error');
-      closeModal(); toast(id ? 'Invoice saved' : 'Invoice created'); await load(); render();
     });
   });
 }
@@ -563,10 +702,17 @@ document.addEventListener('click', async (e) => {
     else if (d.download) window.open(await signedUrl(state.files.find((f) => f.id === d.download).storage_path), '_blank', 'noopener');
     else if (d.pdf) window.open(await signedUrl(d.pdf), '_blank', 'noopener');
     else if (d.tfilter) { sessionStorage.setItem('ticketFilter', d.tfilter); render(); }
+    else if (d.bfilter) { sessionStorage.setItem('billingFilter', d.bfilter); render(); }
+    else if (d.act === 'zoho-pull') zohoPull();
     else if (d.paid) {
       const { error } = await supabase.from('invoices').update({ status: 'paid', paid_on: new Date().toISOString().slice(0, 10) }).eq('id', d.paid);
       if (error) throw error;
-      toast('Marked as paid'); await load(); render();
+      toast('Marked as paid');
+      if (state.invoices.find((x) => x.id === d.paid)?.zoho_invoice_id) {
+        zohoCall('payment', { invoice_id: d.paid }).then((r) => r.recorded && toast('Payment recorded in Zoho too'))
+          .catch((err) => toast(`Marked paid here, but Zoho said: ${err.message}`, 'error'));
+      }
+      await load(); render();
     } else if (d.toggle) {
       const m = state.projects.flatMap((p) => p.milestones).find((x) => x.id === d.toggle);
       const { error } = await supabase.from('milestones').update({ done: !m.done }).eq('id', m.id);
@@ -617,16 +763,20 @@ let route = 'overview';
 let param;
 function render() {
   if ((route === 'blog' || route === 'careers') && param) return; // never redraw over an open editor
+  if (route === 'analytics') return; // the analytics view refreshes itself
   const keepScroll = window.scrollY;
   view.innerHTML = views[route](param);
   window.scrollTo(0, keepScroll);
 }
 
 await load();
+loadZohoStatus().then(() => { if (route === 'billing') render(); });
+startLiveBadge();
 initShell(profile, {
-  routes: ['overview', 'clients', 'tickets', 'approvals', 'billing', 'blog', 'careers', 'enquiries'],
+  routes: ['overview', 'analytics', 'clients', 'tickets', 'approvals', 'billing', 'blog', 'careers', 'enquiries'],
   titles: {
     overview: ['Admin', 'Overview'],
+    analytics: ['Website', 'Live traffic'],
     clients: ['Admin', 'Clients'],
     tickets: ['Admin', 'Support queue'],
     approvals: ['Admin', 'Approvals'],
@@ -635,7 +785,13 @@ initShell(profile, {
     careers: ['Content', 'Careers'],
     enquiries: ['Admin', 'Website enquiries'],
   },
-  onRoute(r, p) { if (!((r === 'blog' || r === 'careers') && p)) window.onbeforeunload = null; route = r; param = p; view.innerHTML = views[r](p); window.scrollTo(0, 0); },
+  onRoute(r, p) {
+    if (!((r === 'blog' || r === 'careers') && p)) window.onbeforeunload = null;
+    if (r !== 'analytics') stopAnalytics();
+    route = r; param = p; view.innerHTML = views[r](p); window.scrollTo(0, 0);
+    // Auto-sync Zoho when Billing opens (at most every 15 minutes)
+    if (r === 'billing' && state.zoho?.configured && (!state.zoho.last_synced_at || Date.now() - new Date(state.zoho.last_synced_at) > 15 * 6e4)) zohoPull({ quiet: true });
+  },
 });
 
 supabase.channel('admin-live')
