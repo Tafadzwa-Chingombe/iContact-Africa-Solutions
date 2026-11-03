@@ -115,7 +115,7 @@ The Billing tab can import every invoice from Zoho Invoice, create portal invoic
    ```
    Copy the `refresh_token` from the reply.
 6. Supabase → **Edge Functions → Secrets** → add `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`,
-   `ZOHO_REFRESH_TOKEN`, `ZOHO_ORG_ID` and `ZOHO_DC`. Don't paste these into chat, email or the website.
+   `ZOHO_REFRESH_TOKEN` and `ZOHO_DC` (plus `ZOHO_ORG_ID` only if you have more than one Zoho organisation). Don't paste these into chat, email or the website.
 7. Deploy the functions:
    ```bash
    supabase functions deploy zoho-sync

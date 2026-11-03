@@ -7,7 +7,8 @@
 //   { action: 'payment', invoice_id } → record a portal "Mark paid" as a Zoho payment
 //
 // Secrets (Supabase → Edge Functions → Secrets — never in website files):
-//   ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, ZOHO_REFRESH_TOKEN, ZOHO_ORG_ID
+//   ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, ZOHO_REFRESH_TOKEN
+//   ZOHO_ORG_ID — optional; without it Zoho uses your default organisation
 //   ZOHO_DC  — your Zoho data centre domain: com (default), eu, in, com.au, jp, ca, sa, uk
 // Deploy:  supabase functions deploy zoho-sync
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
@@ -23,7 +24,7 @@ const json = (body: unknown, status = 200) =>
 const env = (k: string) => Deno.env.get(k) || '';
 const DC = env('ZOHO_DC') || 'com';
 const API = `https://www.zohoapis.${DC}/invoice/v3`;
-const configured = () => ['ZOHO_CLIENT_ID', 'ZOHO_CLIENT_SECRET', 'ZOHO_REFRESH_TOKEN', 'ZOHO_ORG_ID'].every((k) => env(k));
+const configured = () => ['ZOHO_CLIENT_ID', 'ZOHO_CLIENT_SECRET', 'ZOHO_REFRESH_TOKEN'].every((k) => env(k));
 
 // ---------- Zoho API ---------------------------------------------------------
 let token = '';
@@ -40,8 +41,9 @@ async function accessToken() {
 }
 
 async function zoho(path: string, init: RequestInit = {}) {
-  const sep = path.includes('?') ? '&' : '?';
-  const res = await fetch(`${API}${path}${sep}organization_id=${env('ZOHO_ORG_ID')}`, {
+  const org = env('ZOHO_ORG_ID');
+  const url = org ? `${API}${path}${path.includes('?') ? '&' : '?'}organization_id=${org}` : `${API}${path}`;
+  const res = await fetch(url, {
     ...init,
     headers: { Authorization: `Zoho-oauthtoken ${await accessToken()}`, 'Content-Type': 'application/json', ...(init.headers || {}) },
   });
