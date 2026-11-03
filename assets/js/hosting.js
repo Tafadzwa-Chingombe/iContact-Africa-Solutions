@@ -10,9 +10,9 @@ document.querySelectorAll('[data-price-note]').forEach((el) => { el.textContent 
 // ---------- Web hosting ---------------------------------------------------------
 const hostGrid = document.getElementById('hosting-plans');
 const billingToggle = document.getElementById('billing-toggle');
-let annual = true;
+let annual = false;
 const saveMonths = 12 - ANNUAL_MONTHS;
-document.querySelectorAll('[data-save-months]').forEach((el) => { el.textContent = `${saveMonths} months free`; });
+document.querySelectorAll('[data-save-months]').forEach((el) => { el.textContent = `${saveMonths} month${saveMonths === 1 ? '' : 's'} free`; });
 
 function hostPrice(p) {
   if (!annual) return { big: money(p.monthly), unit: '/ month', sub: 'Billed monthly' };

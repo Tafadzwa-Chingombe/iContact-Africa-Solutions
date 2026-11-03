@@ -3,7 +3,7 @@ import { TLDS, HOSTING_PLANS, EMAIL_PLANS, ANNUAL_MONTHS, money } from './catalo
 
 const from = {
   domains: money(Math.min(...TLDS.map((t) => t.register))),
-  hosting: money(+(Math.min(...HOSTING_PLANS.map((p) => p.monthly)) * ANNUAL_MONTHS / 12).toFixed(2)),
+  hosting: money(Math.min(...HOSTING_PLANS.map((p) => p.monthly))),
   email: money(Math.min(...EMAIL_PLANS.map((p) => p.perUser))),
 };
 document.querySelectorAll('[data-from]').forEach((el) => { if (from[el.dataset.from]) el.textContent = from[el.dataset.from]; });

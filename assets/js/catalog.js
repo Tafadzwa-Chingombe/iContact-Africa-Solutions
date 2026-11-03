@@ -29,22 +29,22 @@ export const TLDS = [
 ];
 
 // Web hosting. `monthly` = price per month when paid monthly.
-// Annual billing uses `annualMonths` (e.g. 10 = pay 10 months, get 12).
-export const ANNUAL_MONTHS = 10;
+// Annual billing: pay ANNUAL_MONTHS months, get 12 (11 = one month free).
+export const ANNUAL_MONTHS = 11;
 
 export const HOSTING_PLANS = [
   {
-    id: 'starter', name: 'Starter', monthly: 4, popular: false,
+    id: 'starter', name: 'Starter', monthly: 15, popular: false,
     tagline: 'One small business website',
     features: ['1 website', '10 GB SSD storage', 'Free SSL certificate', '5 email accounts', 'Weekly backups', 'Email & WhatsApp support'],
   },
   {
-    id: 'business', name: 'Business', monthly: 8, popular: true,
+    id: 'business', name: 'Business', monthly: 30, popular: true,
     tagline: 'Growing businesses & online stores',
     features: ['5 websites', '50 GB NVMe storage', 'Free SSL certificate', '25 email accounts', 'Daily backups', 'Free .co.zw domain (annual plans)', 'Priority support'],
   },
   {
-    id: 'pro', name: 'Pro', monthly: 15, popular: false,
+    id: 'pro', name: 'Pro', monthly: 50, popular: false,
     tagline: 'High-traffic & multi-site',
     features: ['Unlimited websites', '100 GB NVMe storage', 'Free SSL certificate', 'Unlimited email accounts', 'Daily backups + staging site', 'Free .co.zw domain (annual plans)', 'Priority support & uptime monitoring'],
   },
@@ -53,17 +53,17 @@ export const HOSTING_PLANS = [
 // Professional email hosting, priced per mailbox per month.
 export const EMAIL_PLANS = [
   {
-    id: 'mail-basic', name: 'Mail Basic', perUser: 1.5, popular: false,
+    id: 'mail-basic', name: 'Mail Basic', perUser: 10, popular: false,
     tagline: 'Professional address on your domain',
     features: ['10 GB per mailbox', 'Webmail + phone & Outlook setup', 'Spam & virus protection', 'Unlimited aliases'],
   },
   {
-    id: 'mail-business', name: 'Mail Business', perUser: 3, popular: true,
+    id: 'mail-business', name: 'Mail Business', perUser: 18, popular: true,
     tagline: 'For teams that live in their inbox',
     features: ['30 GB per mailbox', 'Shared calendars & contacts', 'Advanced spam filtering', 'Migration from Gmail/old host', 'Daily mailbox backups'],
   },
   {
-    id: 'mail-pro', name: 'Mail Pro', perUser: 5, popular: false,
+    id: 'mail-pro', name: 'Mail Pro', perUser: 25, popular: false,
     tagline: 'Compliance & long-term archiving',
     features: ['50 GB per mailbox', 'Email archiving', 'Shared calendars & contacts', 'Priority migration & support', 'Two-factor login'],
   },
