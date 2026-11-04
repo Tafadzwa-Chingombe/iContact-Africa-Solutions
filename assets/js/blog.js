@@ -33,7 +33,22 @@ const list = document.getElementById('blog-list');
 if (list) {
   const empty = document.getElementById('blog-empty');
   const filters = document.getElementById('blog-filters');
-  (async () => {
+  const wireFilters = () => {
+    if (!filters || filters.hidden) return;
+    filters.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-tag]');
+      if (!b) return;
+      filters.querySelectorAll('[data-tag]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      list.querySelectorAll('.post-card').forEach((c) => {
+        c.hidden = !!b.dataset.tag && !c.dataset.tags.split('|').includes(b.dataset.tag);
+      });
+    });
+  };
+  if (list.hasAttribute('data-static')) {
+    // Cards were written into blog.html by scripts/build_blog.py: nothing to fetch.
+    wireFilters();
+  } else (async () => {
+    // Fallback before the first static build: load the list in the browser.
     if (!configured) { list.hidden = true; empty.hidden = false; return; }
     try {
       const posts = await api(`select=${LIST_COLS}&order=published_at.desc&limit=60`);
@@ -44,14 +59,7 @@ if (list) {
         filters.innerHTML = `<button type="button" aria-pressed="true" data-tag="">All <span class="count">${posts.length}</span></button>` +
           tags.map((t) => `<button type="button" aria-pressed="false" data-tag="${esc(t.toLowerCase())}">${esc(t)}</button>`).join('');
         filters.hidden = false;
-        filters.addEventListener('click', (e) => {
-          const b = e.target.closest('[data-tag]');
-          if (!b) return;
-          filters.querySelectorAll('[data-tag]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-          list.querySelectorAll('.post-card').forEach((c) => {
-            c.hidden = !!b.dataset.tag && !c.dataset.tags.split('|').includes(b.dataset.tag);
-          });
-        });
+        wireFilters();
       }
     } catch {
       // e.g. the blog table isn't set up yet: show the friendly "coming soon" state
@@ -70,6 +78,11 @@ if (article) {
   };
   (async () => {
     if (!configured || !/^[a-z0-9-]{1,120}$/.test(slug)) return notFound();
+    // Old links (article.html?slug=…): send readers to the static page if it has been built.
+    try {
+      const staticUrl = `blog/${slug}.html`;
+      if ((await fetch(staticUrl, { method: 'HEAD' })).ok) return location.replace(staticUrl + location.hash);
+    } catch { /* fall through and render in the browser */ }
     try {
       const [post] = await api(`select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`);
       if (!post) return notFound();

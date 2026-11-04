@@ -45,8 +45,17 @@ python3 -m http.server 8000
 
 ## Blog (admin CMS)
 - Write, schedule and publish articles in **Admin Console → Blog** (`portal/js/admin-blog.js`, Markdown + live preview).
-- Public pages: `blog.html` (list with topic filters) and `article.html?slug=…` (`assets/js/blog.js`).
-- Markdown is rendered with marked + DOMPurify (`assets/js/markdown.js`) so posts can't inject scripts.
+- Public pages are **static and indexable**: `scripts/build_blog.py` writes every published post to
+  `blog/<slug>.html` (own title, description, canonical, Open Graph, BlogPosting + Breadcrumb JSON-LD, full text in
+  the HTML) and writes the post cards into `blog.html`. Don't edit those files by hand — edit the post in the CMS.
+- The **Build blog and sitemap** GitHub Action runs this hourly (and on every push). To publish a post immediately:
+  GitHub → Actions → Build blog and sitemap → Run workflow.
+- `article.html?slug=…` is a noindex fallback: it forwards to the static page, or renders a just-published post in
+  the browser until the next build.
+- Link to another post in Markdown as `/blog/<slug>` or `article.html?slug=<slug>`; the build rewrites both. Start
+  the post body with text, not a `# Title` line (the page already shows the title; the build drops a leading one).
+- Markdown is rendered with Python-Markdown + nh3 at build time, and with marked + DOMPurify (`assets/js/markdown.js`)
+  in the admin preview and fallback page, so posts can't inject scripts.
 
 ## Legal pages
 `privacy.html`, `terms.html`, `cookies.html` — written for this site's real setup (Zimbabwe Cyber and Data

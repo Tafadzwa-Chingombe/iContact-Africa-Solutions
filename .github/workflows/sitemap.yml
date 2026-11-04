@@ -1,12 +1,12 @@
-name: Update sitemap
+name: Build blog and sitemap
 
 on:
   push:
     branches: [main]
-    paths-ignore: ['sitemap.xml']
+    paths-ignore: ['sitemap.xml', 'blog/**']
   schedule:
-    - cron: '17 3 * * *'   # daily, picks up newly published blog posts
-  workflow_dispatch:
+    - cron: '17 * * * *'   # hourly: newly published posts become static pages within the hour
+  workflow_dispatch:       # Actions tab → "Build blog and sitemap" → Run workflow, to publish a post right away
 
 permissions:
   contents: write
@@ -16,19 +16,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  sitemap:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0   # full history, so each page gets its real last-modified date
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install blog build dependencies
+        run: pip install -r scripts/requirements.txt
+      - name: Build static blog pages
+        run: python3 scripts/build_blog.py
       - name: Build sitemap.xml
         run: python3 scripts/build_sitemap.py
       - name: Commit if changed
         run: |
-          if git diff --quiet -- sitemap.xml; then echo "sitemap unchanged"; exit 0; fi
+          git add -A blog blog.html sitemap.xml
+          if git diff --cached --quiet; then echo "blog and sitemap unchanged"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
-          git add sitemap.xml
-          git commit -m "Update sitemap.xml"
+          git commit -m "Update static blog pages and sitemap.xml"
           git push
