@@ -1282,3 +1282,9 @@ a.work-card { color: inherit; text-decoration: none; }
 @media (max-width: 1100px) { .careers-values { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 960px) { .apply-grid, .jobs { grid-template-columns: 1fr; } .careers-values { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px) { .careers-values { grid-template-columns: 1fr; } .no-jobs { grid-template-columns: 1fr; } .cv-banner { flex-direction: column; align-items: flex-start; } }
+
+/* Figma Slides embed (company profiles presented live from Figma) */
+.figma-frame { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #0a1a2e; box-shadow: 0 18px 40px rgb(0 0 0 / 35%); }
+.figma-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; z-index: 1; }
+.figma-poster { position: absolute; inset: 0; z-index: 0; }
+.figma-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
