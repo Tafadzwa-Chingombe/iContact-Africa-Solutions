@@ -63,3 +63,12 @@ Cookie Policy if you ever add analytics or ads.
 | `favicon-*.png`, `/favicon.ico`, `apple-touch-icon.png`, `icon-*.png` | Browser tab and phone home-screen icons |
 
 If the site moves to a custom domain, update the `og:url` / `og:image` addresses in each page's `<head>`.
+
+## Search engines (SEO)
+- `sitemap.xml` lists every public page and every published blog article. It's rebuilt by
+  `scripts/build_sitemap.py`, which the **Update sitemap** GitHub Action runs on every push and daily.
+  Submit it once in Google Search Console: `https://tafadzwa-chingombe.github.io/iContact-Africa-Solutions/sitemap.xml`.
+- Every public page has a canonical URL, the homepage carries business structured data (schema.org),
+  articles add `BlogPosting` data, and portal pages are `noindex`.
+- Moving to your own domain? Update `BASE` in `scripts/build_sitemap.py` and the `og:url` / canonical
+  URLs (search-and-replace `https://tafadzwa-chingombe.github.io/iContact-Africa-Solutions/`).

@@ -75,7 +75,22 @@ if (article) {
       if (!post) return notFound();
       document.title = `${post.title} — iContact Africa Solutions Blog`;
       document.querySelector('meta[name="description"]')?.setAttribute('content', post.excerpt || post.title);
-      const url = location.href.split('#')[0];
+      const url = new URL(`article.html?slug=${post.slug}`, location.href).href;
+      // Tell search engines the one official address for this article, plus article details.
+      document.querySelector('link[rel="canonical"]')?.setAttribute('href', url);
+      document.querySelector('meta[property="og:url"]')?.setAttribute('content', url);
+      document.querySelector('meta[property="og:title"]')?.setAttribute('content', post.title);
+      document.querySelector('meta[property="og:description"]')?.setAttribute('content', post.excerpt || post.title);
+      const ld = document.createElement('script');
+      ld.type = 'application/ld+json';
+      ld.textContent = JSON.stringify({
+        '@context': 'https://schema.org', '@type': 'BlogPosting', headline: post.title, description: post.excerpt || undefined,
+        datePublished: post.published_at, dateModified: post.updated_at || post.published_at, mainEntityOfPage: url,
+        image: post.cover_url || new URL('assets/img/og-image.png', location.href).href, keywords: (post.tags || []).join(', ') || undefined,
+        author: { '@type': 'Person', name: 'Tafadzwa Chingombe' },
+        publisher: { '@type': 'Organization', name: 'iContact Africa Solutions', logo: { '@type': 'ImageObject', url: new URL('assets/img/icon-512.png', location.href).href } },
+      });
+      document.head.appendChild(ld);
       const share = encodeURIComponent(url);
       article.innerHTML = `
         <header class="article-head">
