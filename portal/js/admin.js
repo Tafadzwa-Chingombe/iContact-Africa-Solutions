@@ -389,7 +389,7 @@ function projectForm({ id, client: clientId }) {
         <label class="field"><span>Project name</span><input name="name" required value="${esc(p.name)}"></label>
         <label class="field"><span>Service</span><input name="service" list="services" value="${esc(p.service)}" placeholder="Website"></label>
       </div>
-      <datalist id="services"><option>Website</option><option>E-commerce</option><option>SEO</option><option>Digital Marketing</option><option>Brand &amp; Design</option><option>Paid Advertising</option><option>Google Business Profile</option></datalist>
+      <datalist id="services"><option>Website</option><option>E-commerce</option><option>SEO</option><option>Digital Marketing</option><option>Brand &amp; Design</option><option>Paid Advertising</option><option>Google Business Profile</option><option>AI Voice Agents</option></datalist>
       <div class="field-row">
         <label class="field"><span>Stage</span><select name="stage">${stageOpts(p.stage)}</select></label>
         <label class="field"><span>Progress: <output>${p.progress}</output>%</span><input type="range" name="progress" min="0" max="100" step="5" value="${p.progress}"></label>
@@ -507,7 +507,7 @@ function invoiceForm({ id, client: clientId }) {
           <label class="field"><span>Project name</span><input name="np_name" placeholder="Company website"></label>
           <label class="field"><span>Service</span><input name="np_service" list="services" placeholder="Website"></label>
         </div>
-        <datalist id="services"><option>Website</option><option>E-commerce</option><option>SEO</option><option>Digital Marketing</option><option>Brand &amp; Design</option><option>Paid Advertising</option><option>Google Business Profile</option><option>Hosting</option></datalist>
+        <datalist id="services"><option>Website</option><option>E-commerce</option><option>SEO</option><option>Digital Marketing</option><option>Brand &amp; Design</option><option>Paid Advertising</option><option>Google Business Profile</option><option>AI Voice Agents</option><option>Hosting</option></datalist>
         <label class="check-inline"><input type="checkbox" name="np_defaults" checked> Add default milestones</label>
       </fieldset>
       <div class="field-row">

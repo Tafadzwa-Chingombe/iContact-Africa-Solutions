@@ -15,7 +15,10 @@
     lock: '<rect x="-10" y="-2" width="20" height="15" rx="3"/><path d="M-6-2v-5a6 6 0 0 1 12 0v5"/>',
     check: '<path d="M-7 0l5 5 9-10"/>',
     mail: '<rect x="-12" y="-8" width="24" height="16" rx="2"/><path d="M-12-6l12 8 12-8"/>',
-    phone: '<rect x="-7" y="-12" width="14" height="24" rx="3"/><path d="M-2 8h4"/>'
+    phone: '<rect x="-7" y="-12" width="14" height="24" rx="3"/><path d="M-2 8h4"/>',
+    calendar: '<rect x="-12" y="-10" width="24" height="22" rx="3"/><path d="M-12-3h24M-6-14v6M6-14v6M-5 5l4 4 7-7"/>',
+    bell: '<path d="M-9 6c2-2 2-5 2-10a7 7 0 0 1 14 0c0 5 0 8 2 10z"/><path d="M-3 10a3 3 0 0 0 6 0"/>',
+    user: '<circle cx="-3" cy="-6" r="6"/><path d="M-14 13a11 11 0 0 1 19-7"/><path d="M5 9h9M10 5l4 4-4 4"/>'
   };
   var icon = function (name, x, y, s) {
     return '<g class="sc-icon" transform="translate(' + x + ' ' + y + ') scale(' + (s || 1) + ')">' + I[name] + '</g>';
@@ -160,12 +163,26 @@
       '<g class="sc-float" style="--d:1.4s"><rect x="470" y="300" width="120" height="40" rx="20" class="sc-pill"/><text x="530" y="325" class="sc-pill-t">We’re hiring</text></g>' +
       '<g class="sc-float" style="--d:2s"><circle cx="530" cy="60" r="30" class="sc-card"/>' + icon('monitor', 530, 60) + '</g></g>';
   };
+  S.voice = function () {
+    var bars = '';
+    var hs = [18, 34, 54, 76, 58, 92, 64, 40, 72, 50, 30, 20];
+    for (var k = 0; k < hs.length; k++) {
+      var x = 110 + k * 32, h = hs[k];
+      bars += '<rect x="' + x + '" y="' + (220 - h / 2) + '" width="12" height="' + h + '" rx="6" class="sc-wave" style="--d:' + (k * 0.12).toFixed(2) + 's"/>';
+    }
+    return '<g data-depth="8">' + bars + '</g>' +
+      '<g data-depth="4"><circle cx="300" cy="220" r="44" class="sc-ring"/><circle cx="300" cy="220" r="44" class="sc-ring" style="--d:1.2s"/><circle cx="300" cy="220" r="40" class="sc-core"/>' + icon('phone', 300, 220, 1.3) + '</g>' +
+      '<g data-depth="18" class="sc-float"><circle cx="150" cy="96" r="30" class="sc-card"/>' + icon('calendar', 150, 96) + '</g>' +
+      '<g data-depth="24" class="sc-float" style="--d:1s"><circle cx="460" cy="96" r="30" class="sc-card"/>' + icon('bell', 460, 96) + '</g>' +
+      '<g data-depth="20" class="sc-float" style="--d:2s"><circle cx="460" cy="350" r="30" class="sc-card"/>' + icon('user', 460, 350) + '</g>' +
+      '<g data-depth="14" class="sc-float" style="--d:1.5s"><circle cx="150" cy="350" r="30" class="sc-card"/>' + icon('check', 150, 350) + '</g>';
+  };
   S.tech = S.services;
 
   // ---------------------------------------------------------------- mount hero scene
   var page = (location.pathname.split('/').pop() || 'index.html').replace('.html', '');
   var map = { services: 'services', domains: 'domains', hosting: 'hosting', pricing: 'pricing', about: 'about',
-    blog: 'blog', contact: 'contact', careers: 'careers', privacy: 'legal', terms: 'legal', cookies: 'legal' };
+    blog: 'blog', contact: 'contact', careers: 'careers', 'ai-voice-agents': 'voice', privacy: 'legal', terms: 'legal', cookies: 'legal' };
   var hero = document.querySelector('.page-hero:not(.hero-bg)');
   if (hero) {
     var kind = hero.getAttribute('data-scene') || map[page] || 'tech';
