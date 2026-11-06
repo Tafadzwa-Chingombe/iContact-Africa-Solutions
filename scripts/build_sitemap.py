@@ -11,7 +11,7 @@ from xml.sax.saxutils import escape
 
 BASE = 'https://tafadzwa-chingombe.github.io/iContact-Africa-Solutions/'
 SKIP = {'article.html'}  # noindex fallback; the static pages in blog/ are listed instead
-PRIORITY = {'index.html': '1.0', 'services.html': '0.9', 'ai-voice-agents.html': '0.9', 'pricing.html': '0.9', 'contact.html': '0.9',
+PRIORITY = {'index.html': '1.0', 'services.html': '0.9', 'ai-voice-agents.html': '0.9', 'custom-software.html': '0.9', 'mobile-apps.html': '0.9', 'pricing.html': '0.9', 'contact.html': '0.9',
             'work.html': '0.8', 'domains.html': '0.8', 'hosting.html': '0.8', 'blog.html': '0.8', 'about.html': '0.7',
             'careers.html': '0.6', 'privacy.html': '0.2', 'terms.html': '0.2', 'cookies.html': '0.2'}
 

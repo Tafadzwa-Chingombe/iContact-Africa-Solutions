@@ -177,12 +177,34 @@
       '<g data-depth="20" class="sc-float" style="--d:2s"><circle cx="460" cy="350" r="30" class="sc-card"/>' + icon('user', 460, 350) + '</g>' +
       '<g data-depth="14" class="sc-float" style="--d:1.5s"><circle cx="150" cy="350" r="30" class="sc-card"/>' + icon('check', 150, 350) + '</g>';
   };
+  S.software = function () {
+    var lines = '', ws = [[0, 120, ''], [24, 180, 'blue'], [24, 140, ''], [48, 200, 'lime'], [48, 110, ''], [24, 160, 'blue'], [0, 90, ''], [0, 150, 'lime'], [24, 190, ''], [24, 120, 'blue']];
+    for (var k = 0; k < ws.length; k++) lines += '<rect x="' + (130 + ws[k][0]) + '" y="' + (128 + k * 22) + '" width="' + ws[k][1] + '" height="9" rx="4.5" class="sc-code ' + ws[k][2] + '"/>';
+    return '<g data-depth="6"><rect x="100" y="70" width="400" height="300" rx="16" class="sc-card"/><circle cx="124" cy="94" r="5" class="sc-code"/><circle cx="142" cy="94" r="5" class="sc-code"/><circle cx="160" cy="94" r="5" class="sc-code"/>' +
+      '<g class="sc-typeline">' + lines + '</g></g>' +
+      '<g data-depth="18" class="sc-float"><circle cx="470" cy="120" r="30" class="sc-core"/>' + icon('chart', 470, 120) + '</g>' +
+      '<g data-depth="24" class="sc-float" style="--d:1.5s"><circle cx="120" cy="370" r="28" class="sc-card"/>' + icon('lock', 120, 370) + '</g>' +
+      '<g data-depth="14" class="sc-float" style="--d:.8s"><circle cx="490" cy="350" r="28" class="sc-card"/>' + icon('check', 490, 350) + '</g>';
+  };
+  S.apps = function () {
+    var tiles = '';
+    for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++) {
+      var on = (r * 3 + c) % 4 === 1;
+      tiles += '<rect x="' + (247 + c * 38) + '" y="' + (150 + r * 40) + '" width="28" height="28" rx="8" class="sc-tile' + (on ? ' on' : '') + '" style="--d:' + ((r * 3 + c) * 0.3).toFixed(1) + 's"/>';
+    }
+    return '<g data-depth="6"><rect x="225" y="70" width="150" height="300" rx="26" class="sc-card"/><rect x="280" y="86" width="40" height="7" rx="3.5" class="sc-code"/>' + tiles +
+      '<rect x="247" y="300" width="104" height="34" rx="12" class="sc-code lime"/></g>' +
+      '<g data-depth="18" class="sc-float"><circle cx="140" cy="130" r="30" class="sc-card"/>' + icon('bell', 140, 130) + '</g>' +
+      '<g data-depth="24" class="sc-float" style="--d:1.2s"><circle cx="460" cy="140" r="30" class="sc-core"/>' + icon('check', 460, 140) + '</g>' +
+      '<g data-depth="14" class="sc-float" style="--d:2s"><circle cx="150" cy="330" r="28" class="sc-card"/>' + icon('calendar', 150, 330) + '</g>' +
+      '<g data-depth="20" class="sc-float" style="--d:.6s"><circle cx="455" cy="320" r="28" class="sc-card"/>' + icon('mail', 455, 320) + '</g>';
+  };
   S.tech = S.services;
 
   // ---------------------------------------------------------------- mount hero scene
   var page = (location.pathname.split('/').pop() || 'index.html').replace('.html', '');
   var map = { services: 'services', domains: 'domains', hosting: 'hosting', pricing: 'pricing', about: 'about',
-    blog: 'blog', contact: 'contact', careers: 'careers', 'ai-voice-agents': 'voice', privacy: 'legal', terms: 'legal', cookies: 'legal' };
+    blog: 'blog', contact: 'contact', careers: 'careers', 'ai-voice-agents': 'voice', 'custom-software': 'software', 'mobile-apps': 'apps', privacy: 'legal', terms: 'legal', cookies: 'legal' };
   var hero = document.querySelector('.page-hero:not(.hero-bg)');
   if (hero) {
     var kind = hero.getAttribute('data-scene') || map[page] || 'tech';
