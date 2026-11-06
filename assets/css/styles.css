@@ -529,7 +529,7 @@ a.contact-card:hover { box-shadow: var(--shadow-sm); transform: translateY(-2px)
 .footer-pills a:hover { border-color: rgb(255 255 255 / 40%); }
 
 /* Floating WhatsApp */
-.float-chat { position: fixed; right: 20px; bottom: 20px; z-index: 40; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: #25d366; color: #fff; box-shadow: var(--shadow-md); transition: transform .2s var(--ease); }
+.float-chat { position: fixed; left: 20px; bottom: 20px; z-index: 40; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: #25d366; color: #fff; box-shadow: var(--shadow-md); transition: transform .2s var(--ease); }
 .float-chat:hover { transform: scale(1.06); }
 .float-chat svg { width: 28px; height: 28px; }
 
@@ -1303,3 +1303,7 @@ a.work-card { color: inherit; text-decoration: none; }
 .logo-tile.logo-small img { width: auto; height: auto; max-height: 44px; }
 .logo-tile.logo-small img[width="99"] { height: 24px; margin-top: 6px; }
 .logo-tile.logo-small.logo-dark span { color: rgb(255 255 255 / 78%); font-weight: 500; letter-spacing: .04em; }
+
+/* Nyasha (ElevenLabs widget) sits bottom-right, so WhatsApp moved bottom-left; AI disclosure line in the footer */
+.site-footer .ai-note { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgb(255 255 255 / 8%); font-size: 13px; color: rgb(255 255 255 / 60%); text-align: center; }
+@media (max-width: 640px) { .site-footer { padding-bottom: 104px; } }
