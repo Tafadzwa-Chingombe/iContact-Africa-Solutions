@@ -1354,3 +1354,20 @@ a.work-card { color: inherit; text-decoration: none; }
 /* Nyasha (ElevenLabs widget) sits bottom-right, so WhatsApp moved bottom-left; AI disclosure line in the footer */
 .site-footer .ai-note { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgb(255 255 255 / 8%); font-size: 13px; color: rgb(255 255 255 / 60%); text-align: center; }
 @media (max-width: 640px) { .site-footer { padding-bottom: 104px; } }
+
+/* Explainer video (AI Voice Agents page) */
+.video-card { margin: 0 auto; max-width: 980px; border-radius: var(--radius-lg); overflow: hidden; background: var(--ink-950); box-shadow: var(--shadow-md); }
+.video-card video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--ink-950); }
+.video-note { padding: 12px 18px; font-size: 13px; color: rgb(255 255 255 / 70%); background: var(--ink-900); }
+.transcript { max-width: 980px; margin: 18px auto 0; background: #fff; border: 1px solid var(--grey-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); }
+.transcript summary { cursor: pointer; padding: 16px 22px; font-weight: 600; color: var(--ink-900); list-style: none; display: flex; justify-content: space-between; align-items: center; }
+.transcript summary::-webkit-details-marker { display: none; }
+.transcript summary::after { content: '+'; font-size: 20px; color: var(--brand-600); }
+.transcript[open] summary::after { content: '\2212'; }
+.transcript summary:focus-visible { outline: 3px solid var(--brand-500); outline-offset: 2px; border-radius: var(--radius-lg); }
+.transcript-body { padding: 0 22px 18px; display: grid; gap: 12px; font-size: 15px; color: var(--slate-700); line-height: 1.65; }
+.transcript-call { padding: 12px 16px; border-left: 3px solid var(--lime-500); background: var(--grey-050); border-radius: 0 8px 8px 0; }
+.hero-watch { margin-top: 18px; }
+.hero-watch a { display: inline-flex; align-items: center; gap: 8px; color: var(--lime-500); font-weight: 600; font-size: 15px; text-decoration: underline; text-underline-offset: 4px; }
+.hero-watch svg { width: 18px; height: 18px; }
+.hero-watch a:hover { color: #fff; }
