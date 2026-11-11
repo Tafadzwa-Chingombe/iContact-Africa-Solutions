@@ -161,12 +161,12 @@ Course pages take payment with Paynow: an **EcoCash / OneMoney prompt** on the b
 2. Supabase → **Edge Functions → Secrets**, add:
    - `PAYNOW_INTEGRATION_ID`
    - `PAYNOW_INTEGRATION_KEY`
-   - `PAYNOW_AUTH_EMAIL` = the email you log in to Paynow with — **only while the integration is in test mode** (Paynow rejects other emails in test mode). Delete this secret once Paynow sets the integration live.
+   - Only while the integration is in **test mode**: `PAYNOW_MODE` = `test` and `PAYNOW_AUTH_EMAIL` = the email your Paynow merchant account is registered with (Paynow rejects other emails in test mode). Delete both once Paynow sets the integration live — without `PAYNOW_MODE=test` the auth email is ignored and the buyer's email is used.
 3. Reload a course page — the "Pay with EcoCash / OneMoney / Card & more" form replaces the request form automatically.
 
 **Testing (test mode):** use Paynow's test numbers on the EcoCash/OneMoney option: `0771111111` succeeds, `0772222222` succeeds after a delay, `0773333333` is cancelled by the user, `0774444444` has insufficient balance. Then ask Paynow to set the integration live.
 
-**Go live:** while the integration is in test mode, keep `paynowCheckout: false` in `assets/js/academy-config.js` — Paynow's test checkout page lets anyone simulate a successful payment. Once Paynow has set the integration live: delete the `PAYNOW_AUTH_EMAIL` secret, set `paynowCheckout: true`, push, then make one real small payment to confirm.
+**Go live:** while the integration is in test mode, keep `paynowCheckout: false` in `assets/js/academy-config.js` — Paynow's test checkout page lets anyone simulate a successful payment. Once Paynow has set the integration live: delete the `PAYNOW_MODE` / `PAYNOW_AUTH_EMAIL` secrets, check a payment with a buyer's email no longer returns "integration ID is in test mode", set `paynowCheckout: true`, push, then make one real small payment to confirm.
 
 **Why there's a database relay:** Paynow's server resets secure connections from Supabase Edge Functions, so the function sends its Paynow requests through the database (`public.paynow_post`, using the `http` extension). It only allows `https://www.paynow.co.zw/interface/…` addresses and only the service role can run it.
 

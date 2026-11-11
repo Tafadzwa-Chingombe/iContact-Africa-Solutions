@@ -14,8 +14,8 @@
 // Secrets (Supabase → Edge Functions → Secrets — never in website files):
 //   PAYNOW_INTEGRATION_ID, PAYNOW_INTEGRATION_KEY   from Paynow → Receive Payment Links → 3rd party integration
 //   PAYNOW_CURRENCY   optional, default USD (must match the integration's currency)
-//   PAYNOW_AUTH_EMAIL optional: while the integration is in TEST MODE Paynow only accepts the
-//                     merchant's own email here; remove it once Paynow sets the integration live.
+//   PAYNOW_MODE       set to 'test' only while the integration is in Paynow TEST MODE; then
+//   PAYNOW_AUTH_EMAIL (the merchant's Paynow email) is sent instead of the buyer's, as Paynow requires.
 //   SITE_URL          optional, default https://tafadzwa-chingombe.github.io/iContact-Africa-Solutions/
 // Deploy:  supabase functions deploy paynow --no-verify-jwt   (Paynow can't send a Supabase token)
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
@@ -32,6 +32,8 @@ const env = (k: string) => Deno.env.get(k) || '';
 const SITE = (env('SITE_URL') || 'https://tafadzwa-chingombe.github.io/iContact-Africa-Solutions/').replace(/\/?$/, '/');
 const FN_URL = `${env('SUPABASE_URL')}/functions/v1/paynow`;
 const CURRENCY = env('PAYNOW_CURRENCY') || 'USD';
+// PAYNOW_AUTH_EMAIL is only used when PAYNOW_MODE=test (Paynow test mode needs the merchant's email)
+const TEST_MODE = env('PAYNOW_MODE').toLowerCase() === 'test';
 const configured = () => !!(env('PAYNOW_INTEGRATION_ID') && env('PAYNOW_INTEGRATION_KEY'));
 const URL_WEB = 'https://www.paynow.co.zw/interface/initiatetransaction';
 const URL_MOBILE = 'https://www.paynow.co.zw/interface/remotetransaction';
@@ -179,7 +181,7 @@ async function start(db: DB, b: Row) {
     ['amount', amount],
     ['id', env('PAYNOW_INTEGRATION_ID')],
     ['additionalinfo', `iContact Academy: ${course.title}`.slice(0, 120)],
-    ['authemail', env('PAYNOW_AUTH_EMAIL') || email],
+    ['authemail', (TEST_MODE && env('PAYNOW_AUTH_EMAIL')) || email],
   ];
   if (method !== 'web') pairs.push(['phone', mobile], ['method', method]);
   pairs.push(['status', 'Message']);
