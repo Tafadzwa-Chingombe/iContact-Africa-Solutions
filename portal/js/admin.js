@@ -8,13 +8,14 @@ import { initShell, openModal, closeModal, withBusy, emptyState, stageTracker } 
 import { blogView, loadPosts } from './admin-blog.js';
 import { careersView, loadJobs } from './admin-careers.js';
 import { academyView, loadAcademy, newOrderCount } from './admin-academy.js';
+import { callsView, loadCalls, newLeadCount, syncCalls, callsStatus } from './admin-calls.js';
 import { analyticsView, bindAnalytics, stopAnalytics, startLiveBadge } from './admin-analytics.js';
 
 const { session, profile } = await requireSession({ admin: true });
 const me = session.user.id;
 const view = document.getElementById('view');
 
-const state = { clients: [], projects: [], invoices: [], files: [], tickets: [], enquiries: [], posts: [], jobs: { rows: [] }, academy: { courses: [], lessons: [], orders: [], enrollments: [] }, zoho: null };
+const state = { clients: [], projects: [], invoices: [], files: [], tickets: [], enquiries: [], posts: [], jobs: { rows: [] }, academy: { courses: [], lessons: [], orders: [], enrollments: [] }, calls: { rows: [] }, zoho: null };
 
 async function load() {
   const q = await Promise.all([
@@ -31,9 +32,15 @@ async function load() {
   state.posts = await loadPosts();
   state.jobs = await loadJobs();
   state.academy = await loadAcademy();
+  state.calls = await loadCalls();
   state.projects.forEach((p) => p.milestones.sort((a, b) => a.sort_order - b.sort_order || (a.due_date || '').localeCompare(b.due_date || '')));
   counts();
 }
+
+const callsCtx = {
+  reload: async () => { state.calls = await loadCalls(); counts(); },
+  rerender: () => { if (route === 'calls' && !param) view.innerHTML = views.calls(param); },
+};
 
 // ---------- lookups ---------------------------------------------------------
 const client = (id) => state.clients.find((c) => c.id === id);
@@ -53,6 +60,7 @@ function counts() {
   set('approvals', state.files.filter((f) => f.approval === 'changes_requested').length);
   set('enquiries', newEnquiries().length);
   set('academy', newOrderCount(state.academy));
+  set('calls', newLeadCount(state.calls));
 }
 
 const opts = (rows, label, selected) => rows.map((r) =>
@@ -165,6 +173,10 @@ const views = {
     return careersView(id, state.jobs, { me, reload: async () => { state.jobs = await loadJobs(); } });
   },
 
+  calls(id) {
+    return callsView(id, state.calls, callsCtx);
+  },
+
   academy(id) {
     return academyView(id, state.academy, {
       me,
@@ -225,10 +237,10 @@ function enquiryTable(list) {
   return list.length ? `<div class="table-wrap"><table class="table">
     <thead><tr><th>From</th><th>Service</th><th>Message</th><th>Received</th></tr></thead>
     <tbody>${list.map((e) => `<tr>
-      <td><strong>${esc(e.name)}</strong><a class="muted block" href="mailto:${esc(e.email)}">${esc(e.email)}</a>${e.phone ? `<a class="muted block" href="tel:${esc(e.phone)}">${esc(e.phone)}</a>` : ''}</td>
+      <td><strong>${esc(e.name)}</strong>${e.source === 'ai_call' ? ` <a class="badge badge-draft" href="#calls/${esc(e.ai_call_id)}" title="Captured by Nyasha, the AI assistant">AI call</a>` : ''}${e.email ? `<a class="muted block" href="mailto:${esc(e.email)}">${esc(e.email)}</a>` : ''}${e.phone ? `<a class="muted block" href="tel:${esc(e.phone)}">${esc(e.phone)}</a>` : ''}</td>
       <td>${esc(e.service || '—')}${e.budget ? `<span class="muted block">${esc(e.budget)}</span>` : ''}</td>
       <td class="wrap-text">${esc(e.message)}</td><td>${ago(e.created_at)}</td></tr>`).join('')}</tbody></table></div>`
-    : emptyState('No enquiries yet', 'Submissions from the website contact form land here.');
+    : emptyState('No enquiries yet', 'Submissions from the website contact form and leads from the AI assistant land here.');
 }
 
 // ---------- client detail -----------------------------------------------------
@@ -773,7 +785,7 @@ document.addEventListener('input', (e) => {
 let route = 'overview';
 let param;
 function render() {
-  if ((route === 'blog' || route === 'careers' || route === 'academy') && param) return; // never redraw over an open editor
+  if ((route === 'blog' || route === 'careers' || route === 'academy' || route === 'calls') && param) return; // never redraw over an open editor
   if (route === 'analytics') return; // the analytics view refreshes itself
   const keepScroll = window.scrollY;
   view.innerHTML = views[route](param);
@@ -784,7 +796,7 @@ await load();
 loadZohoStatus().then(() => { if (route === 'billing') render(); });
 startLiveBadge();
 initShell(profile, {
-  routes: ['overview', 'analytics', 'clients', 'tickets', 'approvals', 'billing', 'blog', 'careers', 'academy', 'enquiries'],
+  routes: ['overview', 'analytics', 'clients', 'tickets', 'approvals', 'billing', 'blog', 'careers', 'academy', 'calls', 'enquiries'],
   titles: {
     overview: ['Admin', 'Overview'],
     analytics: ['Website', 'Live traffic'],
@@ -795,13 +807,19 @@ initShell(profile, {
     blog: ['Content', 'Blog'],
     careers: ['Content', 'Careers'],
     academy: ['Content', 'Academy'],
-    enquiries: ['Admin', 'Website enquiries'],
+    calls: ['Website', 'AI assistant calls'],
+    enquiries: ['Admin', 'Enquiries'],
   },
   onRoute(r, p) {
     if (!((r === 'blog' || r === 'careers' || r === 'academy') && p)) window.onbeforeunload = null;
     if (r !== 'analytics') stopAnalytics();
     route = r; param = p; view.innerHTML = views[r](p); window.scrollTo(0, 0);
     // Auto-sync Zoho when Billing opens (at most every 15 minutes)
+    // Auto-sync AI calls when the tab opens (at most every 10 minutes)
+    if (r === 'calls' && !p) callsStatus().then((s) => {
+      if (route !== 'calls' || param) return;
+      if (s.configured && (!s.last_synced_at || Date.now() - new Date(s.last_synced_at) > 10 * 6e4)) syncCalls(callsCtx, { quiet: true }); else render();
+    });
     if (r === 'billing' && state.zoho?.configured && (!state.zoho.last_synced_at || Date.now() - new Date(state.zoho.last_synced_at) > 15 * 6e4)) zohoPull({ quiet: true });
   },
 });

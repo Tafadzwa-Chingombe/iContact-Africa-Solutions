@@ -489,3 +489,26 @@ td.row-actions .btn + .btn { margin-left: 6px; }
 .lesson-notes { font-size: 16px; }
 .player-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--grey-100); }
 @media (max-width: 900px) { .player { grid-template-columns: 1fr; } .player-nav { position: static; max-height: none; } .player-main { order: -1; } }
+
+/* ---------- Admin → AI calls --------------------------------------------- */
+.calls-table tr.row-new td:first-child { box-shadow: inset 3px 0 0 var(--lime-500, #a9ce47); }
+.call-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
+.call-layout aside { position: sticky; top: 90px; display: grid; gap: 20px; }
+.call-layout > div { display: grid; gap: 20px; min-width: 0; }
+.call-layout .card { margin: 0; }
+.call-fields { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; margin: 12px 0 16px; font-size: 14px; }
+.call-fields dt { color: var(--grey-500); }
+.call-fields dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+.call-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.call-evals { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; font-size: 14px; text-transform: capitalize; }
+.transcript-chat { display: flex; flex-direction: column; gap: 10px; max-height: 640px; overflow-y: auto; padding-right: 4px; }
+.transcript-chat .bubble { max-width: 82%; padding: 10px 14px; border-radius: 14px; background: var(--grey-050, #f3f5f8); }
+.transcript-chat .bubble p { margin: 2px 0 0; }
+.transcript-chat .bubble .who { font-size: 12px; font-weight: 600; color: var(--grey-500); }
+.transcript-chat .from-user { align-self: flex-end; background: var(--brand-050, #e8eef8); border-bottom-right-radius: 4px; }
+.transcript-chat .from-agent { align-self: flex-start; border-bottom-left-radius: 4px; }
+@media (max-width: 960px) {
+  .call-layout { grid-template-columns: 1fr; }
+  .call-layout aside { position: static; order: -1; }
+  .transcript-chat { max-height: none; }
+}

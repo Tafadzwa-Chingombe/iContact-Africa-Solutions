@@ -152,6 +152,23 @@ Public pages: `academy.html` (catalogue) and `course.html?slug=…` (one page pe
 
 Database: `supabase/migrations/20261111_academy.sql` (already applied). Lesson content is protected by row-level security: only enrolled students and admins can read non-preview lessons.
 
+## AI assistant calls (Nyasha / ElevenLabs)
+
+Every conversation with Nyasha — the voice/chat assistant on the website — is recorded and analysed by ElevenLabs (transcript, audio, summary and the lead details she collects). **Admin Console → AI calls** copies them in so you don't need to log in to ElevenLabs.
+
+**One-time setup (≈3 minutes):**
+1. ElevenLabs → **Developers → API keys → Create key**. Name it `iContact portal`, restrict it to **ElevenAgents → Read** only (nothing else), and copy it.
+2. Supabase → **Edge Functions → Secrets → Add secret**: name `ELEVENLABS_API_KEY`, paste the key, save. (Never put this key in website files or chat.)
+3. Open **Admin Console → AI calls** and click **Sync now**.
+
+**Using it:**
+- The tab syncs itself when you open it (at most every 10 minutes); **Sync now** forces it.
+- Calls where Nyasha captured a phone number or email are **leads**: they get a badge on the menu, a WhatsApp/Call button, and are also added to **Enquiries** (tagged *AI call*). Tick **Followed up** to clear the badge. People who asked not to be contacted are never added to Enquiries.
+- Open a call for the summary, all collected details, the full transcript, quality checks and the recording (streamed from ElevenLabs when you click *Load recording*; it isn't copied into your storage).
+- Recordings and transcripts stay in ElevenLabs as well; its retention settings decide how long they're kept there. The portal keeps its copy of the transcript until you delete the row.
+
+Database: `supabase/migrations/20261112_ai_calls.sql` (already applied). Function: `supabase/functions/elevenlabs-sync`.
+
 ## Testing the security rules (optional)
 `supabase/tests/` contains a Postgres test suite that impersonates clients, another client, anonymous
 visitors and the admin to prove each can only see/do what they should:
