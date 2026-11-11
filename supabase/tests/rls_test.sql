@@ -169,3 +169,64 @@ set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000c1';
 \echo 'client cannot see unlinked Zoho invoice (expect 0):'
 select count(*) from invoices where zoho_invoice_id = 'z1';
 reset role;
+
+\echo '===== ACADEMY ====='
+reset role;
+insert into auth.users (id,email,raw_user_meta_data) values
+ ('00000000-0000-0000-0000-0000000000d1','s1@x.co','{"full_name":"Student One","role":"student"}'),
+ ('00000000-0000-0000-0000-0000000000e9','evil@x.co','{"full_name":"Evil","role":"admin"}');
+\echo 'invite metadata: student honoured, admin ignored (expect s1=student, evil=client):'
+select email, role from profiles where email in ('s1@x.co','evil@x.co') order by email desc;
+insert into courses (id,slug,title,status,price) values
+ ('aaaaaaaa-0000-0000-0000-000000000001','seo-basics','SEO Basics','published',40),
+ ('aaaaaaaa-0000-0000-0000-000000000002','draft-course','Draft Course','draft',30);
+insert into lessons (id,course_id,title,sort_order,is_preview,video_url,body) values
+ ('bbbbbbbb-0000-0000-0000-000000000001','aaaaaaaa-0000-0000-0000-000000000001','Welcome',0,true,'https://youtu.be/x','free'),
+ ('bbbbbbbb-0000-0000-0000-000000000002','aaaaaaaa-0000-0000-0000-000000000001','Keyword research',1,false,'https://youtu.be/secret','paid'),
+ ('bbbbbbbb-0000-0000-0000-000000000003','aaaaaaaa-0000-0000-0000-000000000002','Draft lesson',0,true,null,'draft');
+insert into enrollments (course_id,user_id,status,amount,pay_method) values
+ ('aaaaaaaa-0000-0000-0000-000000000001','00000000-0000-0000-0000-0000000000d1','active',40,'ecocash');
+
+set role anon;
+\echo 'anon catalogue (expect seo-basics only, 2 lessons, 1 preview):'
+select slug, lesson_count, preview_count from course_catalog();
+\echo 'anon curriculum titles (expect Welcome + Keyword research; only Welcome has an id):'
+select title, lesson_id is not null as has_id from course_curriculum('seo-basics');
+\echo 'anon curriculum of a draft (expect 0 rows):'
+select count(*) from course_curriculum('draft-course');
+\echo 'anon lesson content (expect Welcome only):'
+select title from lessons;
+\echo 'anon can request a place on a published course (expect INSERT 0 1):'
+insert into academy_orders (course_id,full_name,email,pay_method,pay_reference) values ('aaaaaaaa-0000-0000-0000-000000000001','New Student','new@x.co','ecocash','MP123');
+\echo 'anon cannot order a draft course or pre-approve (expect 2x ERROR rls):'
+insert into academy_orders (course_id,full_name,email,pay_method) values ('aaaaaaaa-0000-0000-0000-000000000002','X Y','x@x.co','bank');
+insert into academy_orders (course_id,full_name,email,pay_method,status) values ('aaaaaaaa-0000-0000-0000-000000000001','X Y','x@x.co','bank','approved');
+\echo 'anon cannot read orders or enrolments (expect 0, 0):'
+select count(*) from academy_orders; select count(*) from enrollments;
+
+set role authenticated; set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000c1';
+\echo 'not-enrolled client sees preview only (expect Welcome) and cannot enrol itself (expect ERROR rls):'
+select title from lessons;
+insert into enrollments (course_id,user_id) values ('aaaaaaaa-0000-0000-0000-000000000001','00000000-0000-0000-0000-0000000000c1');
+\echo 'not-enrolled client cannot mark a paid lesson complete (expect ERROR rls):'
+insert into lesson_progress (user_id,lesson_id) values ('00000000-0000-0000-0000-0000000000c1','bbbbbbbb-0000-0000-0000-000000000002');
+
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000d1';
+\echo 'enrolled student sees both lessons of seo-basics, not the draft (expect Keyword research, Welcome):'
+select title from lessons order by title;
+\echo 'student sees own enrolment only (expect 1) and no orders (expect 0):'
+select count(*) from enrollments; select count(*) from academy_orders;
+\echo 'student marks a lesson complete (expect INSERT 0 1) but not for someone else (expect ERROR rls):'
+insert into lesson_progress (user_id,lesson_id) values ('00000000-0000-0000-0000-0000000000d1','bbbbbbbb-0000-0000-0000-000000000002');
+insert into lesson_progress (user_id,lesson_id) values ('00000000-0000-0000-0000-0000000000c1','bbbbbbbb-0000-0000-0000-000000000001');
+\echo 'student cannot edit courses or lessons, or promote themselves (expect UPDATE 0, UPDATE 0, ERROR):'
+update courses set price = 0;
+update lessons set title = 'hacked';
+update profiles set role = 'admin' where id = auth.uid();
+
+set request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+\echo 'admin sees all courses, lessons, orders (expect 2, 3, 1):'
+select count(*) from courses; select count(*) from lessons; select count(*) from academy_orders;
+\echo 'admin curriculum of a draft (expect 1):'
+select count(*) from course_curriculum('draft-course');
+reset role;

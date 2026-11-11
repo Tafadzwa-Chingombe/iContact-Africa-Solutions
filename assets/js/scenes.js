@@ -199,13 +199,25 @@
       '<g data-depth="14" class="sc-float" style="--d:2s"><circle cx="150" cy="330" r="28" class="sc-card"/>' + icon('calendar', 150, 330) + '</g>' +
       '<g data-depth="20" class="sc-float" style="--d:.6s"><circle cx="455" cy="320" r="28" class="sc-card"/>' + icon('mail', 455, 320) + '</g>';
   };
+  S.academy = function () {
+    return '<g data-depth="6"><rect x="110" y="80" width="330" height="220" rx="16" class="sc-card"/>' +
+      '<circle cx="275" cy="175" r="34" class="sc-core"/><path d="M265 158v34l28-17z" fill="#fff"/>' +
+      '<rect x="134" y="262" width="282" height="8" rx="4" class="sc-bar"/><rect x="134" y="262" width="282" height="8" rx="4" class="sc-bar-fill"/>' +
+      '<rect x="134" y="106" width="120" height="9" rx="4.5" class="sc-code"/></g>' +
+      '<g data-depth="16"><rect x="330" y="250" width="190" height="130" rx="14" class="sc-card"/>' +
+      '<rect x="350" y="272" width="110" height="9" rx="4.5" class="sc-code lime"/><rect x="350" y="296" width="140" height="8" rx="4" class="sc-code"/>' +
+      '<rect x="350" y="318" width="120" height="8" rx="4" class="sc-code"/><g class="sc-icon" transform="translate(488 350)"><path d="M-7 0l5 5 9-10"/></g></g>' +
+      '<g data-depth="22" class="sc-float"><circle cx="500" cy="110" r="30" class="sc-card"/>' + icon('pen', 500, 110) + '</g>' +
+      '<g data-depth="12" class="sc-float" style="--d:1.4s"><circle cx="110" cy="360" r="28" class="sc-card"/>' + icon('chart', 110, 360) + '</g>';
+  };
   S.tech = S.services;
 
   // ---------------------------------------------------------------- mount hero scene
   var page = (location.pathname.split('/').pop() || 'index.html').replace('.html', '');
   var map = { services: 'services', domains: 'domains', hosting: 'hosting', pricing: 'pricing', about: 'about',
-    blog: 'blog', contact: 'contact', careers: 'careers', 'ai-voice-agents': 'voice', 'custom-software': 'software', 'mobile-apps': 'apps', privacy: 'legal', terms: 'legal', cookies: 'legal' };
-  var hero = document.querySelector('.page-hero:not(.hero-bg)');
+    blog: 'blog', contact: 'contact', careers: 'careers', 'ai-voice-agents': 'voice', 'custom-software': 'software', 'mobile-apps': 'apps', academy: 'academy', course: 'academy', privacy: 'legal', terms: 'legal', cookies: 'legal' };
+  function mountHero() {
+  var hero = document.querySelector('.page-hero:not(.hero-bg):not(.has-scene)');
   if (hero) {
     var kind = hero.getAttribute('data-scene') || map[page] || 'tech';
     var wrap = document.createElement('div');
@@ -219,6 +231,10 @@
     if (!reduce) parallax(hero, wrap);
     pauseOffscreen(hero, wrap);
   }
+  }
+  mountHero();
+  // Pages that build their hero after loading (e.g. course.html) fire this event.
+  window.addEventListener('scenes:refresh', mountHero);
 
   function parallax(host, scene) {
     if (!finePointer) return;

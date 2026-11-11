@@ -140,6 +140,18 @@ inline. Leave "Email them a Client Portal invite" unticked for a billing-only cl
 later from **Clients → Invite client** with the same email; they'll get a sign-in link.
 (This uses the `invite-client` function, so redeploy it after updating, as in step 7 above.)
 
+## iContact Academy (online courses)
+
+Public pages: `academy.html` (catalogue) and `course.html?slug=…` (one page per course). Students learn in `portal/academy.html`.
+
+1. **Payment details** — fill in `assets/js/academy-config.js` (EcoCash number and name, Paynow link, bank lines). While they are empty, the course page says you will WhatsApp the details.
+2. **Courses** — Admin Console → **Academy → Courses**. Edit a course, add lessons (video link + notes), mark one or two lessons as *Free preview*, then **Publish**. Only published courses appear on the website. Use *unlisted* YouTube/Vimeo links (or Google Drive/Loom/MP4); anyone with an unlisted link can watch it, so treat it as "hidden", not "locked".
+3. **Enrolments** — a visitor requests a place on the course page → it shows under **Academy → Requests** (badge on the nav). Check the money has arrived, click **Approve**: this creates their login (role `student`), gives access, and gives you a one-time sign-in link with a **Send on WhatsApp** button. Prefer the link over email — Supabase's built-in email is limited to a few messages an hour.
+4. **Students** tab — remove/restore access, or make a fresh **Login link** if theirs expired. **Add a student** gives access without a website request (e.g. a cash payment).
+5. Existing clients who buy a course keep their client role and see the course under **Academy** in their portal.
+
+Database: `supabase/migrations/20261111_academy.sql` (already applied). Lesson content is protected by row-level security: only enrolled students and admins can read non-preview lessons.
+
 ## Testing the security rules (optional)
 `supabase/tests/` contains a Postgres test suite that impersonates clients, another client, anonymous
 visitors and the admin to prove each can only see/do what they should:

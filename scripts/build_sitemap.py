@@ -6,13 +6,13 @@ The GitHub Action in .github/workflows/sitemap.yml runs this daily and on every
 push, so new blog posts appear in the sitemap without anyone touching it.
 Change BASE when the site moves to its own domain.
 """
-import glob, re, subprocess
+import glob, json, re, subprocess, urllib.request
 from xml.sax.saxutils import escape
 
 BASE = 'https://tafadzwa-chingombe.github.io/iContact-Africa-Solutions/'
-SKIP = {'article.html'}  # noindex fallback; the static pages in blog/ are listed instead
+SKIP = {'article.html', 'course.html'}  # templates; blog/ pages and course URLs are listed instead
 PRIORITY = {'index.html': '1.0', 'services.html': '0.9', 'ai-voice-agents.html': '0.9', 'custom-software.html': '0.9', 'mobile-apps.html': '0.9', 'pricing.html': '0.9', 'contact.html': '0.9',
-            'work.html': '0.8', 'domains.html': '0.8', 'hosting.html': '0.8', 'blog.html': '0.8', 'about.html': '0.7',
+            'work.html': '0.8', 'domains.html': '0.8', 'hosting.html': '0.8', 'blog.html': '0.8', 'academy.html': '0.8', 'about.html': '0.7',
             'careers.html': '0.6', 'privacy.html': '0.2', 'terms.html': '0.2', 'cookies.html': '0.2'}
 
 
@@ -42,6 +42,24 @@ for p in sorted(glob.glob('*.html')) + sorted(glob.glob('work/*.html')):
 
 for p in sorted(glob.glob('blog/*.html')):  # written by scripts/build_blog.py
     entries.append((BASE + p, article_modified(p), '0.7'))
+
+
+def published_courses():
+    """Published Academy courses (public RPC, anon key only). Never fails the build."""
+    try:
+        cfg = open('portal/js/config.js').read()
+        url = re.search(r"SUPABASE_URL = '([^']+)'", cfg).group(1)
+        key = re.search(r"SUPABASE_ANON_KEY = '([^']+)'", cfg).group(1)
+        req = urllib.request.Request(f'{url}/rest/v1/rpc/course_catalog', data=b'{}', method='POST',
+                                     headers={'apikey': key, 'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'})
+        return json.load(urllib.request.urlopen(req, timeout=20))
+    except Exception as err:
+        print('courses skipped:', err)
+        return []
+
+
+for c in published_courses():
+    entries.append((f"{BASE}course.html?slug={c['slug']}", (c.get('updated_at') or '')[:10] or None, '0.7'))
 
 xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
 for loc, mod, pri in entries:

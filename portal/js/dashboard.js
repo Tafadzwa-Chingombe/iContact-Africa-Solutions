@@ -6,6 +6,7 @@ import {
 import { initShell, openModal, closeModal, withBusy, emptyState, stageTracker } from './shell.js';
 
 const { session, profile } = await requireSession();
+if (profile.role === 'student') { window.location.replace('academy.html'); await new Promise(() => {}); }
 const me = session.user.id;
 const view = document.getElementById('view');
 

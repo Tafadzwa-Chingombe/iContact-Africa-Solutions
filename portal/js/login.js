@@ -30,7 +30,7 @@ const redirectTo = new URL('login.html', window.location.href).href;
 
 async function goToDashboard(userId) {
   const { data } = await supabase.from('profiles').select('role').eq('id', userId).single();
-  window.location.replace(data?.role === 'admin' ? 'admin.html' : 'index.html');
+  window.location.replace(data?.role === 'admin' ? 'admin.html' : data?.role === 'student' ? 'academy.html' : 'index.html');
 }
 
 if (!isConfigured) {

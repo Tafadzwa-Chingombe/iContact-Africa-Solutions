@@ -7,13 +7,14 @@ import { SUPABASE_URL } from './config.js';
 import { initShell, openModal, closeModal, withBusy, emptyState, stageTracker } from './shell.js';
 import { blogView, loadPosts } from './admin-blog.js';
 import { careersView, loadJobs } from './admin-careers.js';
+import { academyView, loadAcademy, newOrderCount } from './admin-academy.js';
 import { analyticsView, bindAnalytics, stopAnalytics, startLiveBadge } from './admin-analytics.js';
 
 const { session, profile } = await requireSession({ admin: true });
 const me = session.user.id;
 const view = document.getElementById('view');
 
-const state = { clients: [], projects: [], invoices: [], files: [], tickets: [], enquiries: [], posts: [], jobs: { rows: [] }, zoho: null };
+const state = { clients: [], projects: [], invoices: [], files: [], tickets: [], enquiries: [], posts: [], jobs: { rows: [] }, academy: { courses: [], lessons: [], orders: [], enrollments: [] }, zoho: null };
 
 async function load() {
   const q = await Promise.all([
@@ -29,6 +30,7 @@ async function load() {
   [state.clients, state.projects, state.invoices, state.files, state.tickets, state.enquiries] = q.map((r) => r.data);
   state.posts = await loadPosts();
   state.jobs = await loadJobs();
+  state.academy = await loadAcademy();
   state.projects.forEach((p) => p.milestones.sort((a, b) => a.sort_order - b.sort_order || (a.due_date || '').localeCompare(b.due_date || '')));
   counts();
 }
@@ -50,6 +52,7 @@ function counts() {
   set('tickets', needsReply().length);
   set('approvals', state.files.filter((f) => f.approval === 'changes_requested').length);
   set('enquiries', newEnquiries().length);
+  set('academy', newOrderCount(state.academy));
 }
 
 const opts = (rows, label, selected) => rows.map((r) =>
@@ -160,6 +163,14 @@ const views = {
 
   careers(id) {
     return careersView(id, state.jobs, { me, reload: async () => { state.jobs = await loadJobs(); } });
+  },
+
+  academy(id) {
+    return academyView(id, state.academy, {
+      me,
+      reload: async () => { state.academy = await loadAcademy(); counts(); },
+      rerender: () => { if (route === 'academy') { view.innerHTML = views.academy(param); } },
+    });
   },
 
   blog(id) {
@@ -762,7 +773,7 @@ document.addEventListener('input', (e) => {
 let route = 'overview';
 let param;
 function render() {
-  if ((route === 'blog' || route === 'careers') && param) return; // never redraw over an open editor
+  if ((route === 'blog' || route === 'careers' || route === 'academy') && param) return; // never redraw over an open editor
   if (route === 'analytics') return; // the analytics view refreshes itself
   const keepScroll = window.scrollY;
   view.innerHTML = views[route](param);
@@ -773,7 +784,7 @@ await load();
 loadZohoStatus().then(() => { if (route === 'billing') render(); });
 startLiveBadge();
 initShell(profile, {
-  routes: ['overview', 'analytics', 'clients', 'tickets', 'approvals', 'billing', 'blog', 'careers', 'enquiries'],
+  routes: ['overview', 'analytics', 'clients', 'tickets', 'approvals', 'billing', 'blog', 'careers', 'academy', 'enquiries'],
   titles: {
     overview: ['Admin', 'Overview'],
     analytics: ['Website', 'Live traffic'],
@@ -783,10 +794,11 @@ initShell(profile, {
     billing: ['Admin', 'Billing'],
     blog: ['Content', 'Blog'],
     careers: ['Content', 'Careers'],
+    academy: ['Content', 'Academy'],
     enquiries: ['Admin', 'Website enquiries'],
   },
   onRoute(r, p) {
-    if (!((r === 'blog' || r === 'careers') && p)) window.onbeforeunload = null;
+    if (!((r === 'blog' || r === 'careers' || r === 'academy') && p)) window.onbeforeunload = null;
     if (r !== 'analytics') stopAnalytics();
     route = r; param = p; view.innerHTML = views[r](p); window.scrollTo(0, 0);
     // Auto-sync Zoho when Billing opens (at most every 15 minutes)

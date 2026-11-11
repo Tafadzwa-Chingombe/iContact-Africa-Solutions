@@ -464,3 +464,28 @@ td.row-actions .btn + .btn { margin-left: 6px; }
 .inline-new legend { font-size: 13px; font-weight: 700; color: var(--brand-700); padding: 0 6px; }
 .inline-new .check-inline { margin-bottom: 10px; }
 #an-body { display: grid; gap: 22px; align-content: start; }
+
+/* ---------- Academy: student learning area ---------- */
+.learn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+.learn-card { display: flex; flex-direction: column; gap: 8px; }
+.learn-card h3 { font-size: 18px; }
+.learn-card .btn { align-self: flex-start; margin-top: 6px; }
+.learn-progress { height: 8px; border-radius: 4px; background: var(--grey-100); overflow: hidden; margin-top: 6px; }
+.learn-progress span { display: block; height: 100%; background: var(--lime-500); border-radius: 4px; transition: width .4s var(--ease); }
+.player { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
+.player-nav { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; }
+.player-nav .back-link { display: inline-block; margin-bottom: 12px; font-size: 14px; }
+.player-module { margin: 16px 0 6px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--grey-500); }
+.player-nav ol { display: grid; gap: 2px; }
+.player-nav li a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; font-size: 14px; color: var(--slate-700); text-decoration: none; }
+.player-nav li a:hover { background: var(--grey-050); }
+.player-nav li a.current { background: var(--brand-050); color: var(--brand-700); font-weight: 600; }
+.player-nav li a small { margin-left: auto; color: var(--grey-500); }
+.player-nav .tick { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--grey-300); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; }
+.player-nav a.done .tick { background: var(--success); border-color: var(--success); }
+.player-main h2 { font-size: 24px; margin: 4px 0 18px; }
+.lesson-video { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #0e141b; margin-bottom: 20px; }
+.lesson-video iframe, .lesson-video video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.lesson-notes { font-size: 16px; }
+.player-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--grey-100); }
+@media (max-width: 900px) { .player { grid-template-columns: 1fr; } .player-nav { position: static; max-height: none; } .player-main { order: -1; } }

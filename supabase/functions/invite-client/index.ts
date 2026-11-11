@@ -29,22 +29,37 @@ Deno.serve(async (req) => {
   if (caller?.role !== 'admin') return json({ error: 'Admins only' }, 403);
 
   // 2. Validate input. `invite: false` creates a billing-only client (no email sent yet).
-  const { email, full_name, company, phone, redirectTo, invite = true } = await req.json().catch(() => ({}));
+  //    `role: 'student'` is the only role accepted here (Academy students); anything else becomes a client.
+  //    `link: true` sends no email and returns a one-time sign-in link to share (e.g. on WhatsApp),
+  //    which avoids the built-in email rate limit.
+  const { email, full_name, company, phone, redirectTo, invite = true, role, link = false } = await req.json().catch(() => ({}));
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: 'Valid email required' }, 400);
-  const meta = { full_name: full_name || '', company: company || '' };
+  const meta: Record<string, string> = { full_name: full_name || '', company: company || '' };
+  if (role === 'student') meta.role = 'student';
 
-  // Already has an account? Return it (and send a sign-in link if an invite was asked for).
+  // Already has an account? Return it (and send or return a sign-in link if asked).
   const { data: existing } = await admin.from('profiles').select('id, role').ilike('email', email).maybeSingle();
   if (existing) {
+    if (link) {
+      const { data: l, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email, options: { redirectTo } });
+      if (error) return json({ error: error.message }, 400);
+      return json({ id: existing.id, email, existing: true, role: existing.role, link: l.properties?.action_link });
+    }
     if (invite) {
       const anon = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { auth: { persistSession: false } });
       const { error } = await anon.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: redirectTo } });
       if (error) return json({ error: error.message }, 400);
     }
-    return json({ id: existing.id, email, existing: true, invited: !!invite });
+    return json({ id: existing.id, email, existing: true, role: existing.role, invited: !!invite });
   }
 
   // 3. Create the account. The DB trigger creates the profile row from this metadata.
+  if (link) {
+    const { data: l, error } = await admin.auth.admin.generateLink({ type: 'invite', email, options: { data: meta, redirectTo } });
+    if (error) return json({ error: error.message }, 400);
+    if (phone && l.user) await admin.from('profiles').update({ phone }).eq('id', l.user.id);
+    return json({ id: l.user?.id, email, link: l.properties?.action_link });
+  }
   const { data, error } = invite
     ? await admin.auth.admin.inviteUserByEmail(email, { data: meta, redirectTo })
     : await admin.auth.admin.createUser({ email, user_metadata: meta, email_confirm: false });
