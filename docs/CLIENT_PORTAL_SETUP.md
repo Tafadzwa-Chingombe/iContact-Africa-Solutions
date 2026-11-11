@@ -166,6 +166,10 @@ Course pages take payment with Paynow: an **EcoCash / OneMoney prompt** on the b
 
 **Testing (test mode):** use Paynow's test numbers on the EcoCash/OneMoney option: `0771111111` succeeds, `0772222222` succeeds after a delay, `0773333333` is cancelled by the user, `0774444444` has insufficient balance. Then ask Paynow to set the integration live.
 
+**Go live:** while the integration is in test mode, keep `paynowCheckout: false` in `assets/js/academy-config.js` — Paynow's test checkout page lets anyone simulate a successful payment. Once Paynow has set the integration live: delete the `PAYNOW_AUTH_EMAIL` secret, set `paynowCheckout: true`, push, then make one real small payment to confirm.
+
+**Why there's a database relay:** Paynow's server resets secure connections from Supabase Edge Functions, so the function sends its Paynow requests through the database (`public.paynow_post`, using the `http` extension). It only allows `https://www.paynow.co.zw/interface/…` addresses and only the service role can run it.
+
 The result URL Paynow notifies is `https://wopueqhatltnexyhahil.supabase.co/functions/v1/paynow` (set automatically on each payment). Every Paynow message is checked against your integration key, and "paid" notices are confirmed with Paynow before access is given. Bank transfers still work through the "Prefer bank transfer?" link. To hide online payment, set `paynowCheckout: false` in `assets/js/academy-config.js`.
 
 Database: `supabase/migrations/20261113_paynow.sql` (applied). Function: `supabase/functions/paynow` (deployed with `--no-verify-jwt`, because Paynow can't send a Supabase login).

@@ -50,7 +50,7 @@ create or replace function public.paynow_post(p_url text, p_body text)
 returns table (status int, content text)
 language plpgsql security definer set search_path = public, extensions as $$
 begin
-  if p_url !~ '^https://www\.paynow\.co\.zw/interface/' then
+  if p_url !~* '^https://www\.paynow\.co\.zw/interface/' then  -- Paynow mixes /interface/ and /Interface/
     raise exception 'paynow_post: URL not allowed';
   end if;
   perform extensions.http_set_curlopt('CURLOPT_TIMEOUT', '30');
