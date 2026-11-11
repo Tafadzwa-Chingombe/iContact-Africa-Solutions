@@ -139,12 +139,13 @@ if (page) {
             <div class="enrol-card">
               <p class="price-label">One-off payment</p>
               <div class="price-big"><b>${money(c.price, c.currency)}</b><span>lifetime access</span></div>
-              ${enrolForm(c)}
+              <div class="enrol-slot">${enrolForm(c)}</div>
             </div>
           </aside>
         </div>
       </section>`;
     bindEnrol(c);
+    setupPaynow(c);
     page.querySelectorAll('[data-preview]').forEach((b) => b.addEventListener('click', () => openPreview(b.dataset.preview)));
     window.dispatchEvent(new Event('scenes:refresh'));
   }
@@ -175,7 +176,7 @@ if (page) {
   }
 
   function bindEnrol(c) {
-    const form = page.querySelector('.enrol-form');
+    const form = page.querySelector('.enrol-slot .enrol-form');
     const status = form.querySelector('.form-status');
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -201,6 +202,129 @@ if (page) {
         status.innerHTML = `We couldn’t send that just now. <a href="${wa}" target="_blank" rel="noopener">Enrol on WhatsApp instead</a>.`;
       }
     });
+  }
+
+  // ---------- Paynow checkout (instant access) ---------------------------------------------
+  const PAYNOW_FN = `${SUPABASE_URL}/functions/v1/paynow`;
+  async function paynow(body) {
+    const res = await fetch(PAYNOW_FN, { method: 'POST', headers, body: JSON.stringify(body) });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok && !out.error) out.error = `HTTP ${res.status}`;
+    return out;
+  }
+
+  async function setupPaynow(c) {
+    const slot = page.querySelector('.enrol-slot');
+    const paymentId = new URLSearchParams(location.search).get('payment');
+    if (paymentId) { showStatus(c, paymentId, null); return; }
+    if (PAY.paynowCheckout === false) return;
+    let cfg = {};
+    try { cfg = await paynow({ action: 'config' }); } catch { return; }
+    if (!cfg.enabled || cfg.currency !== c.currency) return; // keep the request form
+    slot.innerHTML = checkoutForm(c);
+    bindCheckout(c);
+  }
+
+  function checkoutForm(c) {
+    const opt = (v, label, sub, checked) => `<label class="pay-opt"><input type="radio" name="pay_with" value="${v}"${checked ? ' checked' : ''}><span><b>${label}</b><small>${sub}</small></span></label>`;
+    return `
+      <form class="enrol-form checkout-form" novalidate>
+        <label class="field"><span>Full name</span><input name="full_name" required minlength="2" maxlength="120" autocomplete="name"></label>
+        <label class="field"><span>Email <small>(your login)</small></span><input type="email" name="email" required maxlength="200" autocomplete="email"></label>
+        <label class="field"><span>WhatsApp number</span><input type="tel" name="phone" maxlength="40" autocomplete="tel" placeholder="077 123 4567"></label>
+        <fieldset class="pay-opts"><legend>Pay with</legend>
+          ${opt('ecocash', 'EcoCash', 'Prompt on your phone', true)}
+          ${opt('onemoney', 'OneMoney', 'Prompt on your phone')}
+          ${opt('web', 'Card & more', 'Visa, Mastercard, ZimSwitch, InnBucks…')}
+        </fieldset>
+        <label class="field mobile-field"><span>Mobile money number</span><input type="tel" name="mobile" maxlength="20" inputmode="tel" placeholder="0771234567"></label>
+        <input class="hp" type="text" name="company_website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-primary btn-block" type="submit">Pay ${money(c.price, c.currency)}</button>
+        <p class="muted small secure-note">🔒 Secure payment by Paynow. Your course unlocks as soon as payment goes through.</p>
+        <div class="form-status" role="status" aria-live="polite"></div>
+        <p class="small alt-pay"><button type="button" class="link-btn" data-manual>Prefer bank transfer? Request your place instead</button></p>
+      </form>`;
+  }
+
+  function bindCheckout(c) {
+    const slot = page.querySelector('.enrol-slot');
+    const form = slot.querySelector('.checkout-form');
+    const status = form.querySelector('.form-status');
+    const mobileField = form.querySelector('.mobile-field');
+    const payWith = () => form.elements.pay_with.value;
+    const sync = () => { mobileField.hidden = payWith() === 'web'; };
+    form.querySelectorAll('[name=pay_with]').forEach((r) => r.addEventListener('change', sync)); sync();
+    // Copy the WhatsApp number into the mobile-money box until the buyer edits that box themselves
+    let mobileEdited = false;
+    form.mobile.addEventListener('input', () => { mobileEdited = true; });
+    form.phone.addEventListener('input', () => { if (!mobileEdited) form.mobile.value = form.phone.value.replace(/[^\d+]/g, ''); });
+    form.querySelector('[data-manual]').addEventListener('click', () => { slot.innerHTML = enrolForm(c); bindEnrol(c); });
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (form.company_website.value) return;
+      const err = (m) => { status.className = 'form-status error'; status.textContent = m; };
+      if (form.full_name.value.trim().length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.value.trim())) return err('Please add your name and a valid email address — it becomes your login.');
+      const method = payWith();
+      if (method !== 'web' && !/^(\+?263|0)7\d{8}$/.test(form.mobile.value.replace(/[\s-]/g, ''))) return err(`Enter the ${method === 'ecocash' ? 'EcoCash (Econet)' : 'OneMoney (NetOne)'} number to pay from, e.g. 0771234567.`);
+      const btn = form.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = method === 'web' ? 'Opening Paynow…' : 'Sending prompt…';
+      status.className = 'form-status';
+      let out;
+      try {
+        out = await paynow({ action: 'start', slug: c.slug, method, full_name: form.full_name.value.trim(), email: form.email.value.trim(),
+          phone: form.phone.value.trim(), mobile: form.mobile.value.trim(), company_website: form.company_website.value });
+      } catch { out = { error: 'We couldn’t reach the payment service. Check your connection and try again.' }; }
+      if (out.error || !out.payment_id) { btn.disabled = false; btn.textContent = `Pay ${money(c.price, c.currency)}`; return err(out.error || 'Payment could not start.'); }
+      const url = new URL(location.href); url.searchParams.set('payment', out.payment_id);
+      if (out.redirect_url) { history.replaceState(null, '', url); location.href = out.redirect_url; return; }
+      history.replaceState(null, '', url);
+      showStatus(c, out.payment_id, out.instructions || '');
+    });
+  }
+
+  function showStatus(c, id, instructions) {
+    const slot = page.querySelector('.enrol-slot');
+    const started = Date.now();
+    let timer; let stopped = false;
+    const retry = () => {
+      stopped = true; clearTimeout(timer);
+      const url = new URL(location.href); url.searchParams.delete('payment'); history.replaceState(null, '', url);
+      slot.innerHTML = checkoutForm(c); bindCheckout(c);
+    };
+    const panel = (cls, html) => { slot.innerHTML = `<div class="pay-status ${cls}" role="status" aria-live="polite">${html}</div>`; };
+    const waiting = (extra = '') => panel('is-waiting', `<span class="pay-spin" aria-hidden="true"></span>
+      <h3>Waiting for your payment…</h3>
+      <p>${esc(instructions || 'Complete the payment on Paynow. This page updates by itself.')}</p>${extra}`);
+    waiting();
+    document.getElementById('enrol')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const tick = async () => {
+      if (stopped) return;
+      let r;
+      try { r = await paynow({ action: 'check', payment_id: id }); } catch { r = {}; }
+      if (r.error === 'Unknown payment') { panel('is-failed', '<h3>We couldn’t find that payment</h3><p>Try again below.</p><button class="btn btn-primary btn-block" type="button" data-retry>Back to payment</button>'); slot.querySelector('[data-retry]').onclick = retry; return; }
+      if (r.paid && r.ready) {
+        panel('is-paid', `<h3>Payment received ✓</h3><p>You’re enrolled in <b>${esc(c.title)}</b>.</p>
+          ${r.login_link ? `<a class="btn btn-primary btn-block" href="${esc(r.login_link)}">Start learning →</a><p class="muted small">This button signs you in and asks you to choose a password. Next time, log in at <a href="portal/login.html">Student login</a> with <b>${esc(r.email)}</b>.</p>`
+            : r.existing_account ? `<a class="btn btn-primary btn-block" href="portal/login.html">Log in to start learning →</a><p class="muted small">You already have an iContact account (<b>${esc(r.email)}</b>). Log in as usual and the course is waiting under <b>Academy</b>.</p>`
+              : `<a class="btn btn-primary btn-block" href="portal/login.html">Log in to start learning →</a><p class="muted small">Log in with <b>${esc(r.email)}</b> using “Email me a login link”.</p>`}`);
+        return;
+      }
+      if (r.paid) { waiting('<p class="muted small">Payment received — unlocking your course…</p>'); }
+      else if (r.failed) {
+        panel('is-failed', `<h3>Payment ${esc(r.status || 'not completed')}</h3><p>This payment didn’t go through. Try again, or if you were charged, WhatsApp us and we’ll sort it out.</p>
+          <button class="btn btn-primary btn-block" type="button" data-retry>Try again</button>
+          <a class="btn btn-outline btn-block" style="margin-top:8px" href="https://wa.me/${PAY.whatsapp}" target="_blank" rel="noopener">WhatsApp us</a>`);
+        slot.querySelector('[data-retry]').onclick = retry; return;
+      } else if (Date.now() - started > 4 * 60e3) {
+        waiting(`<p class="muted small">Still waiting. If you’ve already approved the payment, it will unlock automatically — you can leave this page open.</p>
+          <button class="btn btn-outline btn-block" type="button" data-retry>Start again</button>`);
+        slot.querySelector('[data-retry]').onclick = retry;
+      } else if (instructions && Date.now() - started > 60e3) {
+        waiting('<p class="muted small">No prompt? Make sure your phone is on and has signal, or <button type="button" class="link-btn" data-retry>start again</button>.</p>');
+        slot.querySelector('[data-retry]').onclick = retry;
+      }
+      timer = setTimeout(tick, Date.now() - started > 4 * 60e3 ? 15000 : 4000);
+    };
+    timer = setTimeout(tick, 2500);
   }
 
   async function openPreview(id) {

@@ -152,6 +152,24 @@ Public pages: `academy.html` (catalogue) and `course.html?slug=…` (one page pe
 
 Database: `supabase/migrations/20261111_academy.sql` (already applied). Lesson content is protected by row-level security: only enrolled students and admins can read non-preview lessons.
 
+### Paynow checkout (instant access)
+
+Course pages take payment with Paynow: an **EcoCash / OneMoney prompt** on the buyer's phone, or **Paynow's checkout page** (cards, ZimSwitch, InnBucks…). When Paynow confirms the payment, the student's login is created, the course unlocks, and an approved row appears in **Admin → Academy → Requests → Recently handled**. New students get a "Start learning" button that signs them in and asks them to choose a password; people who already have an iContact login just log in as usual.
+
+**Switch it on:**
+1. Paynow → **Receive Payment Links → Other Payment Links / 3rd party integration** (USD). Copy the **Integration ID** and **Integration Key**.
+2. Supabase → **Edge Functions → Secrets**, add:
+   - `PAYNOW_INTEGRATION_ID`
+   - `PAYNOW_INTEGRATION_KEY`
+   - `PAYNOW_AUTH_EMAIL` = the email you log in to Paynow with — **only while the integration is in test mode** (Paynow rejects other emails in test mode). Delete this secret once Paynow sets the integration live.
+3. Reload a course page — the "Pay with EcoCash / OneMoney / Card & more" form replaces the request form automatically.
+
+**Testing (test mode):** use Paynow's test numbers on the EcoCash/OneMoney option: `0771111111` succeeds, `0772222222` succeeds after a delay, `0773333333` is cancelled by the user, `0774444444` has insufficient balance. Then ask Paynow to set the integration live.
+
+The result URL Paynow notifies is `https://wopueqhatltnexyhahil.supabase.co/functions/v1/paynow` (set automatically on each payment). Every Paynow message is checked against your integration key, and "paid" notices are confirmed with Paynow before access is given. Bank transfers still work through the "Prefer bank transfer?" link. To hide online payment, set `paynowCheckout: false` in `assets/js/academy-config.js`.
+
+Database: `supabase/migrations/20261113_paynow.sql` (applied). Function: `supabase/functions/paynow` (deployed with `--no-verify-jwt`, because Paynow can't send a Supabase login).
+
 ## AI assistant calls (Nyasha / ElevenLabs)
 
 Every conversation with Nyasha — the voice/chat assistant on the website — is recorded and analysed by ElevenLabs (transcript, audio, summary and the lead details she collects). **Admin Console → AI calls** copies them in so you don't need to log in to ElevenLabs.

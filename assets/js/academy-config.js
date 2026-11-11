@@ -21,6 +21,10 @@ export const ACADEMY_PAYMENT = {
     // 'Branch: Harare',
   ],
 
+  // Pay online with Paynow (EcoCash / OneMoney prompt or Paynow checkout) with instant access.
+  // Turns on automatically once the PAYNOW_* secrets are saved in Supabase. Set to false to hide it.
+  paynowCheckout: true,
+
   // Where students should send proof of payment / questions.
   whatsapp: '263718574277',
 };
