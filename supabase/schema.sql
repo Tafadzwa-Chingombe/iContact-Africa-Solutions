@@ -893,6 +893,29 @@ alter table public.payments enable row level security;
 drop policy if exists "payments admin read" on public.payments;
 create policy "payments admin read" on public.payments for select using ((select public.is_admin()));
 
+-- ---------- Relay: Paynow refuses TLS connections from Edge Functions, so the
+-- function sends its Paynow requests through the database (pgsql-http / libcurl).
+-- Locked to paynow.co.zw and callable only by the service role (the Edge Function).
+create extension if not exists http with schema extensions;
+
+create or replace function public.paynow_post(p_url text, p_body text)
+returns table (status int, content text)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if p_url !~ '^https://www\.paynow\.co\.zw/interface/' then
+    raise exception 'paynow_post: URL not allowed';
+  end if;
+  perform extensions.http_set_curlopt('CURLOPT_TIMEOUT', '30');
+  return query
+    select r.status, r.content::text
+    from extensions.http((
+      'POST', p_url, array[]::extensions.http_header[],
+      'application/x-www-form-urlencoded', coalesce(p_body, '')
+    )::extensions.http_request) r;
+end $$;
+revoke all on function public.paynow_post(text, text) from public, anon, authenticated;
+grant execute on function public.paynow_post(text, text) to service_role;
+
 -- After running: make yourself admin (replace the email):
 --   update public.profiles set role = 'admin' where email = 'you@example.com';
 -- ==========================================================================

@@ -39,6 +39,8 @@ const PAID = new Set(['paid', 'awaiting delivery', 'delivered']);
 const FAILED = new Set(['cancelled', 'failed', 'disputed', 'refunded']);
 type Row = Record<string, any>;
 type DB = ReturnType<typeof createClient>;
+let relayClient: DB | null = null;
+const relay = () => (relayClient ||= createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false } }));
 
 // ---------- Paynow protocol (as in Paynow's official SDKs) ---------------------------------
 // hash = UPPER(SHA512(all values in order, except "hash") + integration key)
@@ -60,8 +62,13 @@ async function paynowPost(url: string, pairs: [string, string][] | null) {
     pairs.push(['hash', await hashOf(pairs)]);
     body = new URLSearchParams(pairs);
   }
-  const res = await fetch(url, { method: 'POST', body, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
-  const params = new URLSearchParams((await res.text()).trim());
+  // Paynow resets TLS connections from Edge Functions, so the request goes out through the
+  // database (public.paynow_post, pgsql-http) — locked to paynow.co.zw, service role only.
+  const { data, error } = await relay().rpc('paynow_post', { p_url: url, p_body: body ? body.toString() : '' });
+  if (error) throw new Error(`Couldn’t reach Paynow: ${error.message}`);
+  const reply = Array.isArray(data) ? data[0] : data;
+  if (!reply || reply.status >= 400) throw new Error(`Paynow HTTP ${reply?.status ?? 'no response'}`);
+  const params = new URLSearchParams(String(reply.content || '').trim());
   const status = (params.get('status') || '').toLowerCase();
   if (status === 'error') throw new Error(params.get('error') || 'Paynow returned an error');
   if (!await verified(params)) throw new Error('Paynow response failed the security check (hash mismatch) — check PAYNOW_INTEGRATION_KEY.');
