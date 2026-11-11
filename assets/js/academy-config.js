@@ -28,3 +28,13 @@ export const ACADEMY_PAYMENT = {
   // Where students should send proof of payment / questions.
   whatsapp: '263718574277',
 };
+
+// ==========================================================================
+// Course trailers shown at the top of each course page, by course web address (slug).
+// A trailer set in Admin Console -> Academy (courses.trailer_url) takes priority over these.
+// Files live in assets/video/academy/ with -poster.jpg, -vertical.mp4 and -vertical-poster.jpg beside them.
+// ==========================================================================
+export const ACADEMY_TRAILERS = {
+  'website-basics-for-business': 'assets/video/academy/trailer-web-basics.mp4',
+  'html-css-for-beginners': 'assets/video/academy/trailer-html-css.mp4',
+};

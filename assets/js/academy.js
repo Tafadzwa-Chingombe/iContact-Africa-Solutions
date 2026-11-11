@@ -2,7 +2,7 @@
 // Reads published courses and lesson titles through public database functions;
 // lesson content stays locked to enrolled students (row-level security).
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../../portal/js/config.js';
-import { ACADEMY_PAYMENT as PAY } from './academy-config.js';
+import { ACADEMY_PAYMENT as PAY, ACADEMY_TRAILERS } from './academy-config.js';
 import { videoEmbed } from './academy-video.js';
 
 const configured = !SUPABASE_URL.includes('YOUR-PROJECT-REF');
@@ -155,7 +155,7 @@ if (page) {
   // Course trailer (courses.trailer_url). For an MP4, "<name>-poster.jpg", "<name>-vertical.mp4" and
   // "<name>-vertical-poster.jpg" next to it are used when present (the vertical cut on phones).
   function trailerBlock(c) {
-    const url = c.trailer_url;
+    const url = c.trailer_url || ACADEMY_TRAILERS[c.slug];
     if (!url) return '';
     const head = `<h2>Watch the trailer</h2>`;
     if (!/\.mp4(\?|$)/i.test(url)) return `<div class="course-block course-trailer">${head}${videoEmbed(url, `${c.title}: trailer`)}</div>`;
