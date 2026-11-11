@@ -48,3 +48,6 @@ alter table public.ai_calls enable row level security;
 drop policy if exists "ai_calls admin" on public.ai_calls;
 create policy "ai_calls admin" on public.ai_calls for all
   using ((select public.is_admin())) with check ((select public.is_admin()));
+
+-- One enquiry per AI call, even if two syncs overlap
+create unique index if not exists enquiries_ai_call_id_key on public.enquiries (ai_call_id) where ai_call_id is not null;

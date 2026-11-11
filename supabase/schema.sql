@@ -841,6 +841,8 @@ create table if not exists public.ai_calls (
 );
 create index if not exists ai_calls_started_at_idx on public.ai_calls (started_at desc);
 create index if not exists ai_calls_enquiry_id_idx on public.ai_calls (enquiry_id);
+-- One enquiry per AI call, even if two syncs overlap
+create unique index if not exists enquiries_ai_call_id_key on public.enquiries (ai_call_id) where ai_call_id is not null;
 
 alter table public.ai_calls enable row level security;
 drop policy if exists "ai_calls admin" on public.ai_calls;

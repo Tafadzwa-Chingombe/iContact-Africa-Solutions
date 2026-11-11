@@ -114,12 +114,21 @@ async function sync(db: ReturnType<typeof createClient>, full: boolean) {
       const who = row.contact_name || row.business_name || row.phone || row.email;
       const message = [row.summary, row.preferred_slot ? `Preferred call time: ${row.preferred_slot}` : '', row.follow_up_notes && row.follow_up_notes !== row.summary ? `Notes: ${row.follow_up_notes}` : '']
         .filter(Boolean).join('\n\n') || 'Lead captured by the AI assistant.';
+      // An overlapping sync may have created it already: reuse that enquiry (unique index on ai_call_id)
+      const { data: existing } = await db.from('enquiries').select('id').eq('ai_call_id', id).maybeSingle();
+      if (existing) { row.enquiry_id = existing.id; }
+      else {
       const { data: enq, error } = await db.from('enquiries').insert({
         name: row.business_name && row.contact_name ? `${row.contact_name} (${row.business_name})` : who,
         email: row.email, phone: row.phone, service: SERVICE[String(row.service || '').toLowerCase()] || row.service, budget: row.budget,
         message, source: 'ai_call', ai_call_id: id, created_at: row.started_at,
       }).select('id').single();
       if (!error) { row.enquiry_id = enq.id; leads++; }
+      else if (error.code === '23505') {
+        const { data: again } = await db.from('enquiries').select('id').eq('ai_call_id', id).maybeSingle();
+        row.enquiry_id = again?.id ?? null;
+      }
+      }
     }
     const { error } = await db.from('ai_calls').upsert(row, { onConflict: 'conversation_id' });
     if (error) throw new Error(error.message);

@@ -36,7 +36,10 @@ async function fn(body, raw = false) {
   return out;
 }
 
+let syncing = false;
 export async function syncCalls(ctx, { quiet = false, full = false } = {}) {
+  if (syncing) return; // never run two syncs at once
+  syncing = true;
   const btn = document.getElementById('calls-sync');
   if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
   try {
@@ -46,6 +49,7 @@ export async function syncCalls(ctx, { quiet = false, full = false } = {}) {
     if (!quiet || r.imported) toast(r.imported ? `${r.imported} new call${r.imported === 1 ? '' : 's'}${r.leads ? ` · ${r.leads} lead${r.leads === 1 ? '' : 's'} added to Enquiries` : ''}` : 'Up to date — no new calls');
     if (r.more) toast('More calls to import — click Sync again', 'error');
   } catch (e) { if (!quiet) toast(e.message, 'error'); }
+  syncing = false;
   ctx.rerender();
 }
 
