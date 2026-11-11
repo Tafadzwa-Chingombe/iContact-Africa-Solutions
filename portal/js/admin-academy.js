@@ -259,6 +259,7 @@ function editorHtml(c, st) {
       <label class="field"><span>About this course</span><textarea name="description" rows="5" maxlength="4000">${esc(v.description)}</textarea></label>
       <label class="field"><span>Who it’s for</span><textarea name="who_for" rows="2" maxlength="600">${esc(v.who_for)}</textarea></label>
       <label class="field"><span>Cover image URL <small class="muted">(optional, 16:9)</small></span><input type="url" name="cover_url" maxlength="500" value="${esc(v.cover_url)}"></label>
+      <label class="field"><span>Trailer video URL <small class="muted">(optional; MP4, YouTube, Vimeo, Drive or Loom — shown at the top of the course page)</small></span><input type="url" name="trailer_url" maxlength="500" value="${esc(v.trailer_url)}"></label>
       <div class="btn-row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-ghost" type="submit" data-action="draft">${v.status === 'published' ? 'Unpublish (save as draft)' : 'Save draft'}</button>
         <button class="btn btn-primary" type="submit" data-action="published">${v.status === 'published' ? 'Save changes' : 'Publish to the Academy'}</button>
@@ -301,6 +302,8 @@ async function bindEditor(c, st, ctx) {
       outcomes: lines(form.outcomes.value), description: form.description.value.trim() || null, who_for: form.who_for.value.trim() || null,
       cover_url: form.cover_url.value.trim() || null, status,
     };
+    // Only send trailer_url once the column exists (migrations/20261114_course_trailers.sql), so saving keeps working before then
+    if ((c && 'trailer_url' in c) || form.trailer_url.value.trim()) row.trailer_url = form.trailer_url.value.trim() || null;
     if (status === 'published' && c && !st.lessons.some((l) => l.course_id === c.id) && !confirm('This course has no lessons yet. Publish anyway?')) return;
     const q = c ? supabase.from('courses').update(row).eq('id', c.id).select().single() : supabase.from('courses').insert(row).select().single();
     const { data, error } = await q;

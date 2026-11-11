@@ -637,6 +637,7 @@ create table if not exists public.courses (
   outcomes      text[] not null default '{}',
   who_for       text check (length(who_for) <= 600),
   cover_url     text check (length(cover_url) <= 500),
+  trailer_url   text check (length(trailer_url) <= 500),   -- promo video on the course page (see migrations/20261114_course_trailers.sql)
   status        text not null default 'draft' check (status in ('draft', 'published')),
   sort_order    int not null default 0,
   created_at    timestamptz not null default now(),
@@ -766,13 +767,15 @@ create policy "progress own" on public.lesson_progress for all to authenticated
               and exists (select 1 from public.lessons l where l.id = lesson_id and public.has_course_access(l.course_id)));
 
 -- ---------- Public catalogue + curriculum (titles only, never lesson content) ----
-create or replace function public.course_catalog()
+alter table public.courses add column if not exists trailer_url text check (length(trailer_url) <= 500);
+drop function if exists public.course_catalog();
+create function public.course_catalog()
 returns table (id uuid, slug text, title text, subtitle text, category text, level text, price numeric, currency text,
-               duration_text text, description text, outcomes text[], who_for text, cover_url text,
+               duration_text text, description text, outcomes text[], who_for text, cover_url text, trailer_url text,
                lesson_count bigint, total_minutes bigint, preview_count bigint)
 language sql stable security definer set search_path = public as $$
   select c.id, c.slug, c.title, c.subtitle, c.category, c.level, c.price, c.currency, c.duration_text, c.description,
-         c.outcomes, c.who_for, c.cover_url,
+         c.outcomes, c.who_for, c.cover_url, c.trailer_url,
          count(l.id), coalesce(sum(l.duration_min), 0), count(l.id) filter (where l.is_preview)
   from public.courses c left join public.lessons l on l.course_id = c.id
   where c.status = 'published'

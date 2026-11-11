@@ -3,6 +3,7 @@
 // lesson content stays locked to enrolled students (row-level security).
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../../portal/js/config.js';
 import { ACADEMY_PAYMENT as PAY } from './academy-config.js';
+import { videoEmbed } from './academy-video.js';
 
 const configured = !SUPABASE_URL.includes('YOUR-PROJECT-REF');
 const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' };
@@ -122,6 +123,7 @@ if (page) {
       <section class="section">
         <div class="container course-layout">
           <div>
+            ${trailerBlock(c)}
             ${c.outcomes?.length ? `<div class="course-block"><h2>What you’ll learn</h2><ul class="course-outcomes">${c.outcomes.map((o) => `<li>${esc(o)}</li>`).join('')}</ul></div>` : ''}
             ${c.description ? `<div class="course-block"><h2>About this course</h2>${c.description.split(/\n{2,}/).map((p) => `<p>${esc(p)}</p>`).join('')}</div>` : ''}
             ${c.who_for ? `<div class="course-block"><h2>Who it’s for</h2><p>${esc(c.who_for)}</p></div>` : ''}
@@ -148,6 +150,25 @@ if (page) {
     setupPaynow(c);
     page.querySelectorAll('[data-preview]').forEach((b) => b.addEventListener('click', () => openPreview(b.dataset.preview)));
     window.dispatchEvent(new Event('scenes:refresh'));
+  }
+
+  // Course trailer (courses.trailer_url). For an MP4, "<name>-poster.jpg", "<name>-vertical.mp4" and
+  // "<name>-vertical-poster.jpg" next to it are used when present (the vertical cut on phones).
+  function trailerBlock(c) {
+    const url = c.trailer_url;
+    if (!url) return '';
+    const head = `<h2>Watch the trailer</h2>`;
+    if (!/\.mp4(\?|$)/i.test(url)) return `<div class="course-block course-trailer">${head}${videoEmbed(url, `${c.title}: trailer`)}</div>`;
+    const base = url.replace(/\.mp4(\?.*)?$/i, '');
+    const phone = matchMedia('(max-width: 640px)').matches;
+    return `<div class="course-block course-trailer">${head}
+      <figure class="video-card${phone ? ' is-vertical' : ''}">
+        <video controls playsinline preload="none" poster="${esc(base + (phone ? '-vertical-poster.jpg' : '-poster.jpg'))}" aria-label="${esc(c.title)}: course trailer">
+          ${phone ? `<source src="${esc(base)}-vertical.mp4" type="video/mp4">` : ''}<source src="${esc(url)}" type="video/mp4">
+          <a href="${esc(url)}">Download the trailer (MP4)</a>
+        </video>
+        <figcaption class="video-note">About a minute &middot; narrated by Nyasha, iContact&rsquo;s AI assistant &middot; captions are shown in the video &middot; the voice is AI-generated and the screens are examples</figcaption>
+      </figure></div>`;
   }
 
   function payBlock() {
