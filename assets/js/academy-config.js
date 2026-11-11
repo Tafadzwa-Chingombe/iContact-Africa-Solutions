@@ -23,7 +23,7 @@ export const ACADEMY_PAYMENT = {
 
   // Pay online with Paynow (EcoCash / OneMoney prompt or Paynow checkout) with instant access.
   // Turns on automatically once the PAYNOW_* secrets are saved in Supabase. Set to false to hide it.
-  paynowCheckout: false, // tested OK — switch to true once Paynow sets the integration LIVE (and delete the PAYNOW_AUTH_EMAIL secret)
+  paynowCheckout: true,
 
   // Where students should send proof of payment / questions.
   whatsapp: '263718574277',
