@@ -1359,6 +1359,10 @@ a.work-card { color: inherit; text-decoration: none; }
 .video-card { margin: 0 auto; max-width: 980px; border-radius: var(--radius-lg); overflow: hidden; background: var(--ink-950); box-shadow: var(--shadow-md); }
 .video-card video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--ink-950); }
 .video-note { padding: 12px 18px; font-size: 13px; color: rgb(255 255 255 / 70%); background: var(--ink-900); }
+/* Course trailers (course.html): 9:16 cut on phones */
+.course-trailer .video-card { margin: 0; }
+.course-trailer .video-card.is-vertical { max-width: 420px; margin: 0 auto; }
+.course-trailer .video-card.is-vertical video { aspect-ratio: 9 / 16; }
 .transcript { max-width: 980px; margin: 18px auto 0; background: #fff; border: 1px solid var(--grey-100); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); }
 .transcript summary { cursor: pointer; padding: 16px 22px; font-weight: 600; color: var(--ink-900); list-style: none; display: flex; justify-content: space-between; align-items: center; }
 .transcript summary::-webkit-details-marker { display: none; }
